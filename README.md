@@ -1,5 +1,5 @@
 # assemble-chat-server
-Assemble is a GPLv3, secure html-based chat system meant to be self-hosted among a group of friends. It supports auto-deletion of messages, encryption, and minimal drive-based storage of data.
+Assemble is a GPLv3, a database-less, full featured html chat system meant to be quick to set up and easy to host. It supports auto-expiration of messages, autoparses links and images, and more
 
 ## Features Implemented
 * Golang based Https and Socket server
@@ -23,21 +23,10 @@ Assemble is a GPLv3, secure html-based chat system meant to be self-hosted among
 * User token 'sharing' to other user-owned devices once signed in
 * More...
 
-## Stretch Features to Consider
+## Other Features to Consider
 * Direct Messaging
 * (Optional) Text message / push notification process
 * (Optional) Inter-server communication system
 * Image uploads in messages
 * Client-side addition of "emoticons/stickers"
 
-### User Token structure
-UID, PRIVID, nick, name, email, phone, url, desc, avatar
-
-### Message structure
-MSGID, UID, room, expTime, contents, sentOn,
-
-### Room structure
-privOrPub, name, creatorUID, membersUIDs, invitedUIDs, maxExpTime, minExpTime, avatar, maxHistory
-
-#### Potential Gotchas
-Full token must be sent with each message to verify authenticity
