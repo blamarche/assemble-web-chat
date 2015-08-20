@@ -128,6 +128,11 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
           width: 32px;
           height: 32px;
       }
+      span.avatar {
+          width: 32px;
+          height: 32px;
+          font-size: 32px;
+      }
       #preview {
           display:none;
       }
@@ -164,11 +169,11 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
         <div class="row">
             <ul id="sidebar">
                 <li class="menuitems clearfloat">
-                    <div id="btnroomlist"><button><span class="glyphicon glyphicon-list"></span></button></div>
-                    <div id="btncreateroom"><button><span class="glyphicon glyphicon-plus-sign"></span></button></div>
-                    <div id="btnduration"><button><span class="glyphicon glyphicon-time"></span></button></div>
-                    <div id="btninvitenewuser"><button><span class="glyphicon glyphicon-envelope"></span></button></div>
-                    <div id="btninviteroom"><button><span class="glyphicon glyphicon-share-alt"></span></button></div>
+                    <div id="btnroomlist" title="List All Public Rooms"><button><span class="glyphicon glyphicon-list"></span></button></div>
+                    <div id="btncreateroom" title="Create A New Room"><button><span class="glyphicon glyphicon-plus-sign"></span></button></div>
+                    <div id="btnduration" title="Set message duration"><button><span class="glyphicon glyphicon-time"></span></button></div>
+                    <div id="btninvitenewuser" title="Invite a new user to Assemble"><button><span class="glyphicon glyphicon-envelope"></span></button></div>
+                    <div id="btninviteroom" title="Invite a user to this room"><button><span class="glyphicon glyphicon-share-alt"></span></button></div>
                     <div class="clearfloat"></div>
                 </li>
             </ul>
@@ -299,6 +304,9 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
         appendChatMessage(d.room,d.name,d.nick,d.m,d.msgid,d.avatar,d.time);
         rooms[d.room].messages.push(d);
         scrollToBottom();
+        if ($("#m").prop('disabled')==true) {
+            $("#m").focus();
+        }
         $("#m").prop('disabled', false);
 
         try {
@@ -463,8 +471,13 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
             time = fuzzyTime(new Date(time*1000));
         }
 
+        var avatarimg = "<img src='"+avatar+"' class='avatar'></img>";
+        if (avatar=="") {
+            avatarimg = "<span class='glyphicon glyphicon-user avatar'></span>";
+        }
+
         $('#messages').append($('<li>')
-            .html("<div class='useravatar'><img src='"+avatar+"' class='avatar'></img></div><div class='messagecontainer'><span class='nick'>"+nick+"</span> <span class='time'>"+time+"</span> <br><span class='messagetext'>"+m+"</span>")
+            .html("<div class='useravatar'>"+avatarimg+"</div><div class='messagecontainer'><span class='nick'>"+nick+"</span> <span class='time'>"+time+"</span> <br><span class='messagetext'>"+m+"</span>")
             .attr("data-msgid", id)
             .attr("data-room", room)
             .attr("title",id)
