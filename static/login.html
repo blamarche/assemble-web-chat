@@ -1,0 +1,20 @@
+<html>
+<head>
+    <title>Assemble - Login</title>
+</head>
+<body>
+    <form id="f">
+        <input type="text" id="token"></input>
+        <br>
+        <button id="login">Login</button>
+    </form>
+
+    <script src="/jquery-1.11.1.js"></script>
+    <script>
+        $('form').submit(function(){
+            window.location = "/#"+$("#token").val();
+            return false;
+        });
+    </script>
+</body>
+</html>
