@@ -29,6 +29,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -69,7 +70,10 @@ var users map[string]*gabs.Container
 var invites map[string]string
 var banlist map[string]string
 var userkey []byte
-var adminpass = "PASS" //TODO make this a configurable param
+var adminpass = "PASS"
+var host = "localhost"
+var port = ":443"
+var defaultinvite = ""
 
 //MAIN FUNC
 func main() {
@@ -94,14 +98,32 @@ func main() {
 	rooms["lobby"] = createRoom("Lobby", "lobby", false, "", dur1h, dur30s, "", 100)
 	rooms["_test"] = createRoom("TEST", "_test", false, "", dur30s, dur30s, "", 100) //TODO: remove
 
-	//TODO only set this if passed in via command line
-	invites["123"] = "user@localhost"
+	//read params from terminal
+	if len(os.Args) > 1 {
+		host = os.Args[1]
+		if host == "--help" {
+			fmt.Println("usage: assemble <host> <port> <adminpass> <invitekey>")
+			return
+		}
+		if len(os.Args) > 2 {
+			port = os.Args[2]
+		}
+		if len(os.Args) > 3 {
+			adminpass = os.Args[3]
+		}
+		if len(os.Args) > 4 {
+			defaultinvite = os.Args[4]
+		}
+	}
+
+	if defaultinvite != "" {
+		invites[defaultinvite] = "admin@localhost"
+	}
 
 	// Check if the cert files are available and make new ones if needed
-	//TODO: configurable port and IP for cert/binding
 	err := httpscerts.Check("cert.pem", "key.pem")
 	if err != nil {
-		err = httpscerts.Generate("cert.pem", "key.pem", "localhost:8081")
+		err = httpscerts.Generate("cert.pem", "key.pem", host)
 		if err != nil {
 			log.Fatal("Error: Couldn't create https certs.")
 		}
@@ -302,11 +324,14 @@ func main() {
 				return
 			}
 
+			//TODO message size limit enforcement
+
 			g.SetP("", "t")    //clear full token
 			g.SetP(uid, "uid") //set uid and user info
 			g.SetP(time.Now().Unix(), "time")
 			g.SetP(users[uid].Path("nick").Data().(string), "nick")
 			g.SetP(uuid.NewV4().String(), "msgid")
+			g.SetP(users[uid].Path("avatar").Data().(string), "avatar")
 
 			//validate if user is in this room
 			if g.Path("room").Data() == nil {
@@ -364,8 +389,8 @@ func main() {
 	//setup history expiration goroutine
 	go expireHistory(server)
 
-	log.Println("Serving at :8081")
-	log.Fatal(http.ListenAndServeTLS(":8081", "cert.pem", "key.pem", nil))
+	log.Println("Serving at " + host + port)
+	log.Fatal(http.ListenAndServeTLS(port, "cert.pem", "key.pem", nil))
 }
 
 func createRoomList() string {
@@ -451,7 +476,9 @@ func joinRooms(so socketio.Socket, uid string) {
 
 func addToRoom(so socketio.Socket, uid string, room string) {
 	rooms[room].MemberUIDs[uid] = uid
-	joinRoom(so, uid, room)
+	if so != nil {
+		joinRoom(so, uid, room)
+	}
 }
 
 func joinRoom(so socketio.Socket, uid string, room string) {
@@ -617,6 +644,7 @@ func signup(w http.ResponseWriter, r *http.Request) {
 
 			users[token.Path("uid").Data().(string)] = token
 			etok, _ := encrypt(userkey, []byte(token.String()))
+			addToRoom(nil, token.Path("uid").Data().(string), "lobby")
 
 			fmt.Fprintf(w, `<html>`)
 			fmt.Fprintf(w, "Token (KEEP THIS SOMEWHERE SAFE OR SAVE THE LOGIN LINK!): <br>%0x<br><br>", etok)

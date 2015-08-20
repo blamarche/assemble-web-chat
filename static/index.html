@@ -25,8 +25,9 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; width: 100%; height: 100%;}
       form { background: #000; padding: 3px; position: fixed; bottom: 0; left: 0; width: 100%; }
-      form input { border: 0; padding: 10px; width: 85%;}
-      form button { padding: 10px; height:36px !important; width:10%; overflow:hidden; }
+      form input { border: 0; padding: 10px; width: 78%; }
+      form button { padding: 3px; height:36px !important; width:auto; overflow:hidden; }
+      #imgup { padding: 3px; height:36px !important; width:auto; overflow:hidden; }
       #messages { list-style-type: none; margin: 0; padding: 0; margin-bottom: 50px; padding-left: 150px;}
       #messages li { padding: 5px 10px; clear:both; }
       #messages li:nth-child(odd) { background: #eee; }
@@ -46,6 +47,27 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
       #messages li img.autolink {
           width: 100%;
       }
+          div.useravatar {
+              float:left;
+          }
+          div.messagecontainer {
+              padding-left: 42px;
+          }
+          span.nick {
+              font-weight: bold;
+              color:#085;
+          }
+          span.time {
+              display: inline-block;
+              border-radius: 50px;
+              background-color: #888;
+              padding: 0px 5px;
+              color:#eee;
+              font-size: 10px;
+              float: right;
+              margin-top: 3px;
+          }
+
       #sidebar {
           background:#555;
           color:#eee;
@@ -79,6 +101,13 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
           margin-top: 3px;
       }
       .hidden { display: none; }
+      img.avatar {
+          width: 32px;
+          height: 32px;
+      }
+      #preview {
+          display:none;
+      }
 
       @media (max-width: 480px) {
           #messages { padding-left: 70px; }
@@ -89,6 +118,8 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
     <script src="/socket.io.js"></script>
     <script src="/jquery-1.11.1.js"></script>
     <script src="/Autolinker.min.js"></script>
+    <script src="/dropzone.js"></script>
+
     <script src="/bootstrap/js/bootstrap.min.js"></script>
   </head>
 
@@ -96,6 +127,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
     <div class="container-fluid">
 
         <!-- UI -->
+        <div id="preview"></div>
         <div class="row">
             <ul id="sidebar"></ul>
             <ul id="messages"></ul>
@@ -103,7 +135,8 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
 
         <form action="">
           <input id="m" autocomplete="off" />
-          <button class="btn btn-success"><span class="glyphicon glyphicon-send" aria-hidden="true"></span></button>
+          <button id="sendbtn" class="btn btn-success"><span class="glyphicon glyphicon-send" aria-hidden="true"></span></button>
+          <button id="imgup" class="btn btn-primary"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></button>
         </form>
 
     </div>
@@ -113,6 +146,21 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
     $(document).ready(function(){
         $( window ).resize(function() {
             updateSidebar();
+        });
+
+        $("#imgup").dropzone({
+            url:"/",
+            paramName: "file", // The name that will be used to transfer the file
+            maxFilesize: 0.5, // MB
+            previewsContainer: $("#preview")[0],
+            clickable: true,
+            maxFiles:1,
+            acceptedFiles: ".png,.jpg,.gif,.jpeg",
+            autoProcessQueue: false,
+            thumbnail: function(file, imguri) {
+                console.log(imguri)
+                socket.emit('chatm', JSON.stringify({"t": token, "room": cur_room, "m": imguri, "dur":cur_dur}));
+            }
         });
     });
 
@@ -130,17 +178,19 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
 
     $('form').submit(function(){
         var m = $('#m').val();
-        if (m[0]=="/") {
-            handleCommand(socket,m);
-        } else {
-            socket.emit('chatm', JSON.stringify({"t": token, "room": cur_room, "m": m, "dur":cur_dur}));
-            $('#m').val('');
-            $("#m").prop('disabled', true);
+        if (m!=""){
+            if (m[0]=="/") {
+                handleCommand(socket,m);
+            } else {
+                socket.emit('chatm', JSON.stringify({"t": token, "room": cur_room, "m": m, "dur":cur_dur}));
+                $('#m').val('');
+                $("#m").prop('disabled', true);
+            }
         }
         return false;
     });
 
-    //error in js seems to break socket connection, wrap in try catch?
+    //TODO troubleshoot delay in data trasmission of sockets?
     socket.on('connect', function(d) {
         socket.emit("auth", token);
     });
@@ -148,7 +198,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
     socket.on('chatm', function(d){
         //console.log(d);
         d=JSON.parse(d);
-        appendChatMessage(d.room,d.name,d.nick,d.m,d.msgid);
+        appendChatMessage(d.room,d.name,d.nick,d.m,d.msgid,d.avatar,d.time);
         rooms[d.room].messages.push(d);
         scrollToBottom();
         $("#m").prop('disabled', false);
@@ -175,13 +225,15 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
             }
             return false;
         });
+
+        scrollToBottom();
     });
 
     socket.on('history', function(d){
         d=JSON.parse(d);
         //console.log(d);
         for (var i=0; i<d.history.length; i++) {
-            appendChatMessage(d.room,d.name,d.history[i].nick,d.history[i].m,d.history[i].msgid);
+            appendChatMessage(d.room,d.name,d.history[i].nick,d.history[i].m,d.history[i].msgid, d.history[i].avatar,d.history[i].time);
             rooms[d.room].messages.push(d.history[i]);
         }
 
@@ -252,11 +304,10 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
     }
 
     function scrollToBottom() {
-        $("#messages").scrollTop($('#messages')[0].scrollHeight);
+        $(window).scrollTop($('body')[0].scrollHeight);
     }
 
-    function appendChatMessage(room, roomname, nick, m, id) {
-        //TODO add timestamp to mesage
+    function appendChatMessage(room, roomname, nick, m, id, avatar, time) {
         var hide = "";
         if (room!=cur_room) {
             hide="hidden";
@@ -265,32 +316,48 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
         var tmp = $('<div>')
         tmp.text(m);
         m=tmp.text();
+        //TODO needs escaping
 
-        m = Autolinker.link(m, {
-            stripPrefix: false,
-            truncate: 30,
-            className:"autolink",
-            twitter:false,
-            hashtag: false,
-            replaceFn : function( autolinker, match ) {
-                href = match.getAnchorHref();
-                switch( match.getType() ) {
-                    case 'url' :
-                        if ( match.getUrl().indexOf( '.jpg' ) !== -1 ||
-                             match.getUrl().indexOf( '.jpeg' ) !== -1 ||
-                             match.getUrl().indexOf( '.png' ) !== -1 ||
-                             match.getUrl().indexOf( '.gif' ) !== -1  )
-                        {
-                            return "<a href='"+href+"' target='_blank'>"+href+"</a><br><img src='"+href+"' class='autolink'></img>";
-                        }
-                        break;
+        if (m.indexOf("data:image/")==0) {
+            m = "<img class='autolink upload' src='"+m+"'></img>";
+        } else {
+            m = Autolinker.link(m, {
+                stripPrefix: false,
+                truncate: 30,
+                className:"autolink",
+                twitter:false,
+                hashtag: false,
+                replaceFn : function( autolinker, match ) {
+                    href = match.getAnchorHref();
+                    switch( match.getType() ) {
+                        case 'url' :
+                            if ( match.getUrl().indexOf( '.jpg' ) !== -1 ||
+                                 match.getUrl().indexOf( '.jpeg' ) !== -1 ||
+                                 match.getUrl().indexOf( '.png' ) !== -1 ||
+                                 match.getUrl().indexOf( '.gif' ) !== -1  )
+                            {
+                                return "<a href='"+href+"' target='_blank'>"+href+"</a><br><img src='"+href+"' class='autolink'></img>";
+                            }
+                            break;
+                    }
+                    return;
                 }
-                return;
-            }
-        });
+            });
+        }
+
+        if (avatar=="" || typeof avatar=="undefined") {
+            avatar = "";
+        }
+
+        //TODO optimize avatar
+        if (typeof time=="undefined") {
+            time="";
+        } else {
+            time = fuzzyTime(new Date(time*1000));
+        }
 
         $('#messages').append($('<li>')
-            .html(roomname+":"+nick+":"+m)
+            .html("<div class='useravatar'><img src='"+avatar+"' class='avatar'></img></div><div class='messagecontainer'><span class='nick'>"+nick+"</span> <span class='time'>"+time+"</span> <br><span class='messagetext'>"+m+"</span>")
             .attr("data-msgid", id)
             .attr("data-room", room)
             .attr("title",id)
@@ -333,6 +400,35 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
             appendChatMessage("lobby", "Lobby", "SYSTEM", "Unknown room", "");
         } else {
             switchRoom(new_room);
+        }
+    }
+
+    //TODO make a better fuzzer
+    function fuzzyTime( previous) {
+        current = new Date();
+        var msPerMinute = 60 * 1000;
+        var msPerHour = msPerMinute * 60;
+        var msPerDay = msPerHour * 24;
+        var msPerMonth = msPerDay * 30;
+        var msPerYear = msPerDay * 365;
+
+        var elapsed = current - previous;
+
+        if (elapsed < msPerMinute) {
+            return "";
+        } else if (elapsed < msPerHour) {
+            return Math.round(elapsed/msPerMinute) + ' minutes ago';
+        } else if (elapsed < msPerDay ) {
+            return Math.round(elapsed/msPerHour ) + ' hours ago';
+        } else if (elapsed < msPerMonth) {
+            //return Math.round(elapsed/msPerDay) + ' days ago';
+            return previous.toLocaleDateString()
+        } else if (elapsed < msPerYear) {
+            //return Math.round(elapsed/msPerMonth) + ' months ago';
+            return previous.toLocaleDateString()
+        } else {
+            //return Math.round(elapsed/msPerYear ) + ' years ago';
+            return previous.toLocaleDateString()
         }
     }
 

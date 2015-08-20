@@ -13,10 +13,14 @@ Assemble is a GPLv3, database-less, full featured html chat system meant to be q
 * List public chat rooms
 * Phone friendly, Tablet friendly UI
 * Auto-process message content for links, image embeds, etc
+* User avatars
+* Image uploads in messages
+* Unread / new messages
 
 ## Features Yet To Be Implemented
+* Ui dialogs for create-room/roomlist/invite/msg-duration
 * Invite to chat rooms
-* Room and user avatars
+* Room avatars
 * List of users in a room & online status
 * User timeouts/disconnects
 * Private chat rooms with invite/moderation process
@@ -28,5 +32,4 @@ Assemble is a GPLv3, database-less, full featured html chat system meant to be q
 * Direct Messaging
 * (Optional) Text message / push notification process
 * (Optional) Inter-server communication system
-* Image uploads in messages
 * Client-side addition of "emoticons/stickers"
