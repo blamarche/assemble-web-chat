@@ -1083,13 +1083,35 @@
             resizeInfo.trgHeight = resizeInfo.optHeight;
           }
           canvas = document.createElement("canvas");
-          canvas.width = file.width;
-          canvas.height = file.height;
+
+          //HACK alert - hardcoded to actual image size based scaling
+          var w = file.width;
+          var h = file.height;
+          var r = 1;
+          if (file.width > file.height && file.width > 1024) {
+              r = 1024.0/file.width;
+          } else if (file.height < file.width && file.height > 1024) {
+              r = 1024.0 / file.height;
+          } else if (file.height > 1024 || file.width > 1024) {
+              r = 1024.0 / file.height;
+          }
+
+          w=w*r;
+          h=h*r;
+
+          canvas.width = w;
+          canvas.height = h;
           ctx = canvas.getContext("2d");
           //drawImageIOSFix(ctx, img, (_ref = resizeInfo.srcX) != null ? _ref : 0, (_ref1 = resizeInfo.srcY) != null ? _ref1 : 0, resizeInfo.srcWidth, resizeInfo.srcHeight, (_ref2 = resizeInfo.trgX) != null ? _ref2 : 0, (_ref3 = resizeInfo.trgY) != null ? _ref3 : 0, resizeInfo.trgWidth, resizeInfo.trgHeight);
-          //HACK alert - hardcoded to actual image size
-          drawImageIOSFix(ctx, img, 0,0,file.width,file.height,0,0,file.width,file.height);
+          drawImageIOSFix(ctx, img, 0,0,file.width,file.height,0,0,w,h);
+
           thumbnail = canvas.toDataURL("image/jpeg");
+          thumbnail2 = canvas.toDataURL("image/png");
+
+          if (thumbnail2.length<thumbnail.length) {
+              thumbnail = thumbnail2;
+          }
+
           _this.emit("thumbnail", file, thumbnail);
           if (callback != null) {
             return callback();

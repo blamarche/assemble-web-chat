@@ -69,7 +69,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
           }
 
       #sidebar {
-          background:#555;
+          background:#444;
           color:#eee;
           height: 100%;
           width: 150px;
@@ -100,7 +100,30 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
           display: block;
           margin-top: 3px;
       }
-      .hidden { display: none; }
+      #sidebar .menuitems {
+          background-color: #222 !important;
+          height: 40px;
+          padding: 0;
+          padding-top: 12px;
+      }
+          #sidebar .menuitems div {
+            width: 27px;
+            float:left;
+          }
+          #sidebar .menuitems button {
+              border:none;
+              background: transparent;
+          }
+          #sidebar .menuitems span {
+            float:none;
+            display: block;
+            background-color: transparent;
+            border-radius: 5px;
+            padding: 0px 5px;
+            font-size: 21px;
+            font-weight: normal;
+          }
+
       img.avatar {
           width: 32px;
           height: 32px;
@@ -112,7 +135,17 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
       @media (max-width: 480px) {
           #messages { padding-left: 70px; }
           #sidebar { width: 70px; }
+          #sidebar .menuitems {
+              height: auto;
+          }
+          #sidebar .menuitems div {
+              width: 35px;
+              padding-bottom: 5px;
+          }
       }
+
+      .hidden { display: none; }
+      .clearfloat { clear: both; float: none !important;}
     </style>
 
     <script src="/socket.io.js"></script>
@@ -129,7 +162,16 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
         <!-- UI -->
         <div id="preview"></div>
         <div class="row">
-            <ul id="sidebar"></ul>
+            <ul id="sidebar">
+                <li class="menuitems clearfloat">
+                    <div id="btnroomlist"><button><span class="glyphicon glyphicon-list"></span></button></div>
+                    <div id="btncreateroom"><button><span class="glyphicon glyphicon-plus-sign"></span></button></div>
+                    <div id="btnduration"><button><span class="glyphicon glyphicon-time"></span></button></div>
+                    <div id="btninvitenewuser"><button><span class="glyphicon glyphicon-envelope"></span></button></div>
+                    <div id="btninviteroom"><button><span class="glyphicon glyphicon-share-alt"></span></button></div>
+                    <div class="clearfloat"></div>
+                </li>
+            </ul>
             <ul id="messages"></ul>
         </div>
 
@@ -138,6 +180,10 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
           <button id="sendbtn" class="btn btn-success"><span class="glyphicon glyphicon-send" aria-hidden="true"></span></button>
           <button id="imgup" class="btn btn-primary"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></button>
         </form>
+
+    </div>
+
+    <div id="dialogs">
 
     </div>
 
@@ -155,16 +201,43 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
             previewsContainer: $("#preview")[0],
             clickable: true,
             maxFiles:1,
-            acceptedFiles: ".png,.jpg,.gif,.jpeg",
+            acceptedFiles: "image/*",
             autoProcessQueue: false,
             thumbnail: function(file, imguri) {
-                console.log(imguri)
+                //console.log(imguri)
                 socket.emit('chatm', JSON.stringify({"t": token, "room": cur_room, "m": imguri, "dur":cur_dur}));
             }
         });
+
     });
 
-    var socket = io("", {reconnectionDelayMax:500, reconnectionDelay:500, timeout: 5000, multiplex:false});
+    //setup notifications
+    if ("Notification" in window) {
+        if (Notification.permission === "granted") {
+            //var notification = new Notification("Hi there!");
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission(function (permission) {
+                if (permission === "granted") {
+                }
+            });
+        }
+    } else {
+        window.Notification = {permission:"denied"};
+    }
+
+    var socket = io("", {reconnectionDelayMax:1000, reconnectionDelay:1000, timeout: 10000000, multiplex:false});
+    socket.io.on('connect_timeout', function(e) {
+        console.log("socket timeout");
+        console.log(e);
+    });
+    socket.io.on('connect_error', function(e) {
+        console.log("socket error");
+        console.log(e);
+    });
+    socket.io.on('reconnect_error', function(e) {
+        console.log("socket reconnect error");
+        console.log(e);
+    });
 
     var rooms = {};
     var roomnames = {};
@@ -190,6 +263,31 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
         return false;
     });
 
+    //menu buttons.
+    //TODO switch to bootstrap dialogs, not 'prompt'
+    $("#btnroomlist").on('click', function() {
+        socket.emit("roomlist",JSON.stringify({"t": token}));
+    });
+    $("#btncreateroom").on('click', function() {
+        var roomname = prompt("Enter the room name: ");
+        socket.emit("createroom", JSON.stringify({"t": token, "roomname": roomname, "private":false}));
+    });
+    $("#btnduration").on('click', function() {
+        var m = prompt('Enter the desired default expiration time for your messages (30s, 1m, 10m, 24h, etc): ');
+        var unit = m.substring(m.length-1);
+        if (unit!="s"&&unit!="m"&&unit!="h") {
+            alert("Invalid value.");
+        } else {
+            cur_dur = m;
+        }
+    });
+    $("#btninvitenewuser").on('click', function() {
+        socket.emit("invitenewuser", JSON.stringify({"t": token, "email": prompt("Enter the name the user to invite (optional):")}));
+    });
+    $("#btninviteroom").on('click', function() {
+        console.log('not implemented');
+    });
+
     //TODO troubleshoot delay in data trasmission of sockets?
     socket.on('connect', function(d) {
         socket.emit("auth", token);
@@ -202,6 +300,13 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
         rooms[d.room].messages.push(d);
         scrollToBottom();
         $("#m").prop('disabled', false);
+
+        try {
+            if (Notification.permission==="granted" && (cur_room!=d.room || !document.hasFocus()))
+                var notification = new Notification("["+d.name+"] "+d.nick+": "+d.m.substring(0,256)+" (Assemble Chat)");
+        }catch (err) {
+            console.log(err);
+        }
 
         if (cur_room!=d.room) {
             rooms[d.room].mcount++;
@@ -244,9 +349,11 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
     socket.on('join', function(d){
         d=JSON.parse(d);
         $('#messages').append($('<li>').text("Joined "+d.name));
-        rooms[d.room] = {users: [], messages: [], friendlyname: d.name, mcount: 0};
-        roomnames[d.name] = d.room;
-        switchRoom(d.room);
+        if (!(d.name in roomnames)) {
+            rooms[d.room] = {users: [], messages: [], friendlyname: d.name, mcount: 0};
+            roomnames[d.name] = d.room;
+            switchRoom(d.room);
+        }
         updateSidebar();
     });
 
@@ -363,9 +470,13 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
             .attr("title",id)
             .addClass("chatmsg")
             .addClass(hide)
-            .on("click",function(ev) {
+            .on("contextmenu",function(ev) {
                 var msgid = $(ev.currentTarget).attr("data-msgid")
                 requestDeleteMessage(msgid);
+                return false;
+            })
+            .on("click", function(ev) {
+                console.log("Show user info"); //TODO
             })
         );
     }
@@ -392,6 +503,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
 
         updateSidebar();
         scrollToBottom();
+        $("#m").focus();
     }
 
     function switchRoomByName(roomname) {

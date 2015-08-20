@@ -216,6 +216,7 @@ func main() {
 				so.Emit("ban", "Unbanned")
 			} else {
 				so.Emit("auth_error", "Bad admin password")
+				return
 			}
 		})
 
@@ -231,6 +232,14 @@ func main() {
 			dur1h, _ := time.ParseDuration("1h")
 			dur30s, _ := time.ParseDuration("30s")
 			roomid := uuid.NewV4().String()
+
+			for _, v := range rooms {
+				if v.FriendlyName == name {
+					so.Emit("auth_error", "Room already exists")
+					return
+				}
+			}
+
 			rooms[roomid] = createRoom(name, roomid, false, uid, dur1h, dur30s, "", 100)
 			addToRoom(so, uid, roomid)
 		})
@@ -587,7 +596,7 @@ func publicUserString(token *gabs.Container) string {
 }
 
 func validateUserToken(so socketio.Socket, msg string) (string, error) {
-	//TODO banned uid list, passphrase confirmation?
+	//TODO passphrase confirmation?
 	byt, err := hex.DecodeString(msg)
 	if err != nil {
 		return "", err
