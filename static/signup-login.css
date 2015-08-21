@@ -1,0 +1,21 @@
+body {
+    padding: 60px 0;
+}
+
+.footertext {
+    color:black;
+    font-style: italic;
+    padding: 10px 0px;
+    text-align: center;
+    font-size: 12px;
+}
+
+.help-block {
+    color:white;
+    text-align: center;
+}
+
+.help-block a {
+    color:#0e7;
+    text-align: center;
+}

@@ -18,11 +18,12 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
+	"bytes"
+	"compress/zlib"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -96,7 +97,6 @@ func main() {
 	dur1h, _ := time.ParseDuration("1h")
 	dur30s, _ := time.ParseDuration("30s")
 	rooms["lobby"] = createRoom("Lobby", "lobby", false, "", dur1h, dur30s, "", 100)
-	rooms["_test"] = createRoom("TEST", "_test", false, "", dur30s, dur30s, "", 100) //TODO: remove
 
 	//read params from terminal
 	if len(os.Args) > 1 {
@@ -134,12 +134,16 @@ func main() {
 		log.Fatal(err)
 	}
 
+	//TODO Harden / error-proof this stuff
+	//TODO an error shouldnt halt the whole thing
 	server.On("connection", func(so socketio.Socket) {
 		so.On("auth", func(msg string) {
 			uid, err := validateUserToken(nil, msg)
 			if err != nil {
 				so.Emit("auth_error", "Invalid Token")
-				log.Println("Invalid or banned user attempt")
+				if msg != "" {
+					log.Println("Invalid or banned user attempt")
+				}
 				return
 			}
 
@@ -187,7 +191,7 @@ func main() {
 				return
 			}
 
-			//TODO save/load these to disk
+			//TODO save/load bans to disk
 			pass := g.Path("pass").Data().(string)
 			banid := g.Path("uid").Data().(string)
 
@@ -207,7 +211,7 @@ func main() {
 				return
 			}
 
-			//TODO save/load these to disk
+			//TODO save/load bans to disk
 			pass := g.Path("pass").Data().(string)
 			banid := g.Path("uid").Data().(string)
 
@@ -393,13 +397,15 @@ func main() {
 
 	http.Handle("/socket.io/", server)
 	http.HandleFunc("/signup/", signup)
+	http.HandleFunc("/login/", login)
 	http.Handle("/", http.FileServer(http.Dir("./static")))
 
 	//setup history expiration goroutine
 	go expireHistory(server)
 
 	log.Println("Serving at " + host + port)
-	log.Fatal(http.ListenAndServeTLS(port, "cert.pem", "key.pem", nil))
+	//log.Fatal(http.ListenAndServeTLS(port, "cert.pem", "key.pem", nil))
+	http.ListenAndServeTLS(port, "cert.pem", "key.pem", nil)
 }
 
 func createRoomList() string {
@@ -519,7 +525,6 @@ func sendRoomHistory(so socketio.Socket, uid string, room string) {
 	k := room
 
 	//send chat history
-	//TODO optimize
 	history := "{\"history\":["
 	for j := 0; j < len(v.Messages); j++ {
 		history += v.Messages[j].String()
@@ -596,18 +601,23 @@ func publicUserString(token *gabs.Container) string {
 }
 
 func validateUserToken(so socketio.Socket, msg string) (string, error) {
-	//TODO passphrase confirmation?
-	byt, err := hex.DecodeString(msg)
+	s, err := base64.StdEncoding.DecodeString(msg)
 	if err != nil {
 		return "", err
 	}
+	byt := []byte(s)
 
 	tok, err := decrypt(userkey, byt)
 	if err != nil {
 		return "", err
 	}
 
-	token, err := gabs.ParseJSON(tok)
+	uncomp, err := uncompress(tok)
+	if err != nil {
+		return "", err
+	}
+
+	token, err := gabs.ParseJSON(uncomp.Bytes())
 	if err != nil {
 		return "", err
 	}
@@ -635,7 +645,15 @@ func validateUserToken(so socketio.Socket, msg string) (string, error) {
 	return uid, nil
 }
 
+func login(w http.ResponseWriter, r *http.Request) {
+	fc, _ := ioutil.ReadFile("./static/login.html")
+	if fc != nil {
+		fmt.Fprintf(w, string(fc[:]))
+	}
+}
+
 func signup(w http.ResponseWriter, r *http.Request) {
+	//TODO Validation
 	if strings.ToUpper(r.Method) == "POST" {
 		invite, ok := invites[r.FormValue("invite")]
 
@@ -652,12 +670,15 @@ func signup(w http.ResponseWriter, r *http.Request) {
 				invite)
 
 			users[token.Path("uid").Data().(string)] = token
-			etok, _ := encrypt(userkey, []byte(token.String()))
+
+			competok := compress([]byte(token.String()))
+			etok, _ := encrypt(userkey, competok.Bytes())
+
 			addToRoom(nil, token.Path("uid").Data().(string), "lobby")
 
 			fmt.Fprintf(w, `<html>`)
-			fmt.Fprintf(w, "Token (KEEP THIS SOMEWHERE SAFE OR SAVE THE LOGIN LINK!): <br>%0x<br><br>", etok)
-			fmt.Fprintf(w, "<a href='/#%0x'>Login Link. BOOKMARK THIS</a>", etok)
+			fmt.Fprintf(w, "Token (KEEP THIS SOMEWHERE SAFE OR SAVE THE LOGIN LINK): <br><textarea rows='10' cols='60'>%s</textarea><br><br>", base64.StdEncoding.EncodeToString(etok))
+			fmt.Fprintf(w, "<a href='/#%s'>Assemble Chat Login</a> BOOKMARK THIS! <strong>DO NOT SHARE THIS LINK</strong>", base64.StdEncoding.EncodeToString(etok))
 			fmt.Fprintf(w, `</html>`)
 		} else {
 			fmt.Fprintf(w, `Invalid Invite ID`)
@@ -728,4 +749,26 @@ func decrypt(key, text []byte) ([]byte, error) {
 		return nil, err
 	}
 	return data, nil
+}
+
+func compress(data []byte) bytes.Buffer {
+	var b bytes.Buffer
+	w := zlib.NewWriter(&b)
+	w.Write(data)
+	w.Close()
+	return b
+}
+
+func uncompress(data []byte) (bytes.Buffer, error) {
+	var buf bytes.Buffer
+	buf.Write(data)
+
+	var unb bytes.Buffer
+	r, err := zlib.NewReader(&buf)
+	if err != nil {
+		return unb, err
+	}
+	io.Copy(&unb, r)
+	r.Close()
+	return unb, nil
 }

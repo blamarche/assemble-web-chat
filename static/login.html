@@ -1,20 +1,61 @@
+<!doctype html>
 <html>
-<head>
-    <title>Assemble - Login</title>
-</head>
-<body>
-    <form id="f">
-        <input type="text" id="token"></input>
-        <br>
-        <button id="login">Login</button>
-    </form>
+<!--
+This file is part of Assemble Web Chat.
 
-    <script src="/jquery-1.11.1.js"></script>
-    <script>
-        $('form').submit(function(){
-            window.location = "/#"+$("#token").val();
-            return false;
-        });
-    </script>
-</body>
+Foobar is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Foobar is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
+-->
+    <head>
+        <title>Assemble Chat - Login</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/signup-login.css" rel="stylesheet">
+        <script src="/jquery-1.11.1.js"></script>
+        <script src="/bootstrap/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+        <div class="container-fluid bg-primary">
+        <div class="row">
+        <div class="col-md-4"></div>
+
+        <div class="col-md-4">
+        <h3>Assemble Login</h3>
+        <form id="f">
+            <div class="form-group"><input class="form-control" placeholder="Paste Your User Token Here" type="text" id="token"></input></div>
+
+            <div class="form-group"><button class="form-control btn btn-success" id="login">Login</button></div>
+        </form>
+
+        </div>
+
+        <div class="col-md-4"></div>
+
+        </div>
+        <div class="row footertext bg-success">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+            Assemble Web Chat is open source software. Check it out on <a href="https://github.com/blamarche/assemble-web-chat">Github</a></div>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+
+
+        <script>
+            $('form').submit(function(){
+                window.location = "/#"+$("#token").val();
+                return false;
+            });
+        </script>
+    </body>
 </html>

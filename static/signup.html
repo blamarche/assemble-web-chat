@@ -1,29 +1,67 @@
 <!doctype html>
 <html>
+<!--
+This file is part of Assemble Web Chat.
+
+Foobar is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Foobar is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
+-->
   <head>
     <title>Assemble Chat Signup</title>
-
-    <style>
-    </style>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/signup-login.css" rel="stylesheet">
+    <script src="/jquery-1.11.1.js"></script>
+    <script src="/bootstrap/js/bootstrap.min.js"></script>
   </head>
 
   <body>
+      <div class="container-fluid bg-primary">
+      <div class="row">
+      <div class="col-md-4"></div>
 
-    <!-- UI nick, name, email, phone, url, desc, avatar -->
+      <div class="col-md-4">
+      <h3>Assemble Signup</h3>
+      <form action="/signup/" name="signup" method="POST">
+          <div class="form-group"><input class="form-control" name="invite" autocomplete="off" placeholder="Invite ID" />
+              <span class="help-block">( ie: a1b2c3d4-e5f6-a1b2-c3d4-e5f6a1b2c3d4 )</span>
+          </div>
+          <div class="form-group"><input class="form-control" name="nick" autocomplete="off" placeholder="Nickname"/></div>
+          <div class="form-group"><input class="form-control" name="name" autocomplete="off" placeholder="Your Name (optional)"/></div>
+          <div class="form-group"><input class="form-control" name="email" autocomplete="off" placeholder="Email (optional)"/></div>
+          <div class="form-group"><input class="form-control" name="phone" autocomplete="off" placeholder="Phone Number (optional)"/></div>
+          <div class="form-group"><input class="form-control" name="url" autocomplete="off" placeholder="Website (optional)"/></div>
+          <div class="form-group"><textarea class="form-control" name="desc" autocomplete="off" placeholder="Description (optional)"></textarea></div>
+          <div class="form-group"><input class="form-control" name="avatar" autocomplete="off" placeholder="Avatar Image DataUri (optional)"/>
+              <span class="help-block" style="text-align:center;">
+                  <a href="http://dataurl.net/#dataurlmaker" target="_blank">Avatar generator. Keep it small! 64x64px</a>
+              </span>
+          </div>
 
-    <form action="/signup/" name="signup" method="POST">
-      Invite ID: <input name="invite" autocomplete="off" />
-      <br>nickname: <input name="nick" autocomplete="off" />
-      <br>name: <input name="name" autocomplete="off" />
-      <br>email: <input name="email" autocomplete="off" />
-      <br>phone: <input name="phone" autocomplete="off" />
-      <br>url: <input name="url" autocomplete="off" />
-      <br>desc: <input name="desc" autocomplete="off" />
-      <br>avatar data url: <input name="avatar" autocomplete="off" />
+          <div class="form-group"><input class="form-control btn btn-success" type="submit" value="Submit" name="submit"></input></div>
+      </form>
+      </div>
 
-      <br><input type="submit" value="Submit" name="submit"></input>
-    </form>
+      <div class="col-md-4"></div>
+
+      </div>
+      <div class="row footertext bg-success">
+          <div class="col-md-4"></div>
+          <div class="col-md-4">
+          Assemble Web Chat is open source software. Check it out on <a href="https://github.com/blamarche/assemble-web-chat">Github</a></div>
+          </div>
+          <div class="col-md-4"></div>
+      </div>
 
   </body>
 </html>

@@ -1,5 +1,5 @@
 # assemble-chat-server
-Assemble is a GPLv3, database-less, full featured html chat system meant to be quick to set up and easy to host. It supports auto-expiration of messages, autoparses links and images, and more
+Assemble is a GPLv3, database-less, full featured html chat system meant to be quick to set up and easy to host. It supports auto-expiration of messages, autoparses links and images and more.
 
 ## Features Implemented
 * Golang based Https and Socket server
