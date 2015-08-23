@@ -56,6 +56,12 @@ type Room struct {
 	Messages      []*gabs.Container
 }
 
+// OnlineUser has info for and online user including last active timestamp
+type OnlineUser struct {
+	So      *socketio.Socket
+	LastAct time.Time
+}
+
 // Err general error holder
 type Err struct {
 	m string
@@ -68,6 +74,7 @@ func (e *Err) Error() string {
 //Globals, eww
 var rooms map[string]*Room
 var users map[string]*gabs.Container
+var onlineusers map[string]*OnlineUser
 var invites map[string]string
 var banlist map[string]string
 var userkey []byte
@@ -90,6 +97,7 @@ func main() {
 
 	rooms = make(map[string]*Room, 100)
 	users = make(map[string]*gabs.Container, 100)
+	onlineusers = make(map[string]*OnlineUser, 100)
 	banlist = make(map[string]string, 100)
 	invites = make(map[string]string, 100)
 
@@ -136,260 +144,7 @@ func main() {
 
 	//TODO Harden / error-proof this stuff
 	//TODO an error shouldnt halt the whole thing
-	server.On("connection", func(so socketio.Socket) {
-		so.On("auth", func(msg string) {
-			uid, err := validateUserToken(nil, msg)
-			if err != nil {
-				so.Emit("auth_error", "Invalid Token")
-				if msg != "" {
-					log.Println("Invalid or banned user attempt")
-				}
-				return
-			}
-
-			log.Println("auth", uid)
-			so.Emit("auth", `success`)
-
-			joinRooms(so, uid)
-		})
-
-		so.On("invitenewuser", func(msg string) {
-			//log.Println(msg)
-			g, _ := gabs.ParseJSON([]byte(msg))
-
-			uid, ok := extractAndCheckToken(so, g)
-			if !ok {
-				return
-			}
-
-			em := g.Path("email").Data().(string)
-			fmt.Println(uid, "invited", em)
-
-			//TODO email invite
-			id := uuid.NewV4().String()
-			invites[id] = em
-
-			so.Emit("invitenewuser", "{\"key\": \""+id+"\"}")
-		})
-
-		so.On("roomlist", func(msg string) {
-			g, _ := gabs.ParseJSON([]byte(msg))
-
-			_, ok := extractAndCheckToken(so, g)
-			if !ok {
-				return
-			}
-
-			so.Emit("roomlist", createRoomList())
-		})
-
-		so.On("ban", func(msg string) {
-			g, _ := gabs.ParseJSON([]byte(msg))
-
-			_, ok := extractAndCheckToken(so, g)
-			if !ok {
-				return
-			}
-
-			//TODO save/load bans to disk
-			pass := g.Path("pass").Data().(string)
-			banid := g.Path("uid").Data().(string)
-
-			if pass == adminpass {
-				banlist[banid] = time.Now().String()
-				so.Emit("ban", "Banned")
-			} else {
-				so.Emit("auth_error", "Bad admin password")
-			}
-		})
-
-		so.On("unban", func(msg string) {
-			g, _ := gabs.ParseJSON([]byte(msg))
-
-			_, ok := extractAndCheckToken(so, g)
-			if !ok {
-				return
-			}
-
-			//TODO save/load bans to disk
-			pass := g.Path("pass").Data().(string)
-			banid := g.Path("uid").Data().(string)
-
-			if pass == adminpass {
-				delete(banlist, banid)
-				so.Emit("ban", "Unbanned")
-			} else {
-				so.Emit("auth_error", "Bad admin password")
-				return
-			}
-		})
-
-		so.On("createroom", func(msg string) {
-			g, _ := gabs.ParseJSON([]byte(msg))
-
-			uid, ok := extractAndCheckToken(so, g)
-			if !ok {
-				return
-			}
-
-			name := g.Path("roomname").Data().(string)
-			dur1h, _ := time.ParseDuration("1h")
-			dur30s, _ := time.ParseDuration("30s")
-			roomid := uuid.NewV4().String()
-
-			for _, v := range rooms {
-				if v.FriendlyName == name {
-					so.Emit("auth_error", "Room already exists")
-					return
-				}
-			}
-
-			rooms[roomid] = createRoom(name, roomid, false, uid, dur1h, dur30s, "", 100)
-			addToRoom(so, uid, roomid)
-		})
-
-		so.On("leave", func(msg string) {
-			g, _ := gabs.ParseJSON([]byte(msg))
-
-			uid, ok := extractAndCheckToken(so, g)
-			if !ok {
-				return
-			}
-			so.Leave(g.Path("room").Data().(string))
-			bc, _ := gabs.ParseJSON([]byte("{}"))
-			bc.SetP(users[uid].Path("uid").Data().(string), "uid")
-			bc.SetP(g.Path("room").Data().(string), "room")
-			so.BroadcastTo(g.Path("room").Data().(string), "leave", bc.String())
-			so.Emit("leave", bc.String())
-		})
-
-		so.On("join", func(msg string) {
-			g, _ := gabs.ParseJSON([]byte(msg))
-
-			uid, ok := extractAndCheckToken(so, g)
-			if !ok {
-				return
-			}
-
-			room := ""
-			if g.Path("roomid").Data() != nil {
-				roomid := g.Path("roomid").Data().(string)
-				_, ok := rooms[roomid]
-				if ok {
-					room = roomid
-				}
-			} else {
-				roomname := g.Path("roomname").Data().(string)
-				for k, v := range rooms {
-					if v.FriendlyName == roomname {
-						room = k
-						break
-					}
-				}
-			}
-
-			if room == "" {
-				so.Emit("auth_error", "Room not found")
-				return
-			}
-
-			_, inroom := rooms[room].MemberUIDs[uid]
-			if !inroom && canJoin(uid, room, true) {
-				addToRoom(so, uid, room)
-			} else if inroom {
-				sendRoomHistory(so, uid, room)
-			}
-		})
-
-		so.On("deletechatm", func(msg string) {
-			g, _ := gabs.ParseJSON([]byte(msg))
-
-			uid, ok := extractAndCheckToken(so, g)
-			if !ok {
-				return
-			}
-
-			room := g.Path("room").Data().(string)
-			msgid := g.Path("msgid").Data().(string)
-
-			for i := 0; i < len(rooms[room].Messages); i++ {
-				m := rooms[room].Messages[i]
-				if m.Path("msgid").Data().(string) == msgid {
-					if m.Path("uid").Data().(string) == uid {
-						so.Emit("deletechatm", msgid)
-						so.BroadcastTo(room, "deletechatm", msgid)
-						rooms[room].Messages = append(rooms[room].Messages[:i], rooms[room].Messages[i+1:]...)
-					} else {
-						so.Emit("auth_error", "Invalid UID, not your message")
-					}
-					return
-				}
-			}
-		})
-
-		so.On("chatm", func(msg string) {
-			//log.Println(msg)
-			g, _ := gabs.ParseJSON([]byte(msg))
-
-			uid, ok := extractAndCheckToken(so, g)
-			if !ok {
-				so.Emit("auth_error", "Invalid Room")
-				return
-			}
-
-			//TODO message size limit enforcement
-
-			g.SetP("", "t")    //clear full token
-			g.SetP(uid, "uid") //set uid and user info
-			g.SetP(time.Now().Unix(), "time")
-			g.SetP(users[uid].Path("nick").Data().(string), "nick")
-			g.SetP(uuid.NewV4().String(), "msgid")
-			g.SetP(users[uid].Path("avatar").Data().(string), "avatar")
-
-			//validate if user is in this room
-			if g.Path("room").Data() == nil {
-				so.Emit("auth_error", "Invalid Room: "+msg)
-				return
-			}
-			roomtmp := g.Path("room").Data().(string)
-			room := ""
-			inrooms := so.Rooms()
-			for i := 0; i < len(inrooms); i++ {
-				if inrooms[i] == roomtmp {
-					room = roomtmp
-				}
-			}
-			if room == "" {
-				so.Emit("auth_error", "Invalid Room")
-				return
-			}
-
-			g.SetP(rooms[room].FriendlyName, "name")
-
-			//validate duration length
-			dur, err := time.ParseDuration(g.Path("dur").Data().(string))
-			if err != nil {
-				g.SetP(strconv.Itoa(int(rooms[room].MaxExpTime.Seconds()))+"s", "dur")
-			} else {
-				if dur > rooms[room].MaxExpTime {
-					dur = rooms[room].MaxExpTime
-					g.SetP(strconv.Itoa(int(dur.Seconds()))+"s", "dur")
-				}
-				if dur < rooms[room].MinExpTime {
-					dur = rooms[room].MinExpTime
-					g.SetP(strconv.Itoa(int(dur.Seconds()))+"s", "dur")
-				}
-			}
-
-			rooms[room].Messages = append(rooms[room].Messages, g)
-			so.Emit("chatm", g.String())
-			so.BroadcastTo(room, "chatm", g.String())
-		})
-
-		so.On("disconnection", func() {
-			//TODO update online status and send updates to clients
-		})
-	})
+	server.On("connection", socketHandlers)
 
 	server.On("error", func(so socketio.Socket, err error) {
 		log.Println("error:", err)
@@ -403,9 +158,401 @@ func main() {
 	//setup history expiration goroutine
 	go expireHistory(server)
 
+	//setup timeout for online status
+	go onlineUserTimeout(server)
+
 	log.Println("Serving at " + host + port)
 	//log.Fatal(http.ListenAndServeTLS(port, "cert.pem", "key.pem", nil))
-	http.ListenAndServeTLS(port, "cert.pem", "key.pem", nil)
+	if port == ":80" {
+		http.ListenAndServe(port, nil)
+	} else {
+		http.ListenAndServeTLS(port, "cert.pem", "key.pem", nil)
+	}
+}
+
+func socketHandlers(so socketio.Socket) {
+	so.On("auth", func(msg string) {
+		uid, err := validateUserToken(nil, msg)
+		if err != nil {
+			so.Emit("auth_error", "Invalid Token")
+			if msg != "" {
+				log.Println("Invalid or banned user attempt")
+			}
+			return
+		}
+
+		log.Println("auth", uid)
+		so.Emit("auth", `success`)
+
+		//send list of online users
+		sendOnlineUserList(so)
+
+		//add user to online status
+		ou := OnlineUser{&so, time.Now()}
+		onlineusers[uid] = &ou
+		//since the user end sup joining lobby anyway, no need to broadcast any global online status alert
+
+		so.On("disconnection", func() {
+			//send disconnect message to all rooms they are in
+			for k, v := range onlineusers {
+				if v.So == &so {
+					delete(onlineusers, k)
+
+					rms := so.Rooms()
+					for i := 0; i < len(rms); i++ {
+						broadcastUserLeave(rms[i], k, so)
+					}
+
+					so.BroadcastTo("lobby", "userdisconnect", `{"uid":"`+k+`"}`)
+					break
+				}
+			}
+		})
+
+		joinRooms(so, uid)
+	})
+
+	so.On("inviteusertoroom", func(msg string) {
+		g, _ := gabs.ParseJSON([]byte(msg))
+
+		uid, ok := extractAndCheckToken(so, g)
+		if !ok {
+			return
+		}
+
+		invuid := g.Path("uid").Data().(string)
+		_, uok := users[invuid]
+		if uok {
+			invuser, invok := onlineusers[invuid]
+			if !invok {
+				so.Emit("auth_error", "Offline uid, try again later")
+				return
+			}
+
+			room := g.Path("room").Data().(string)
+			r, rok := rooms[room]
+			if rok {
+				if r.IsPrivate {
+					caninvite := false
+					if r.CreatorUID == uid {
+						caninvite = true
+					} else {
+						_, ismember := r.MemberUIDs[uid]
+						if !ismember {
+							caninvite = false
+						}
+					}
+
+					if !caninvite {
+						so.Emit("auth_error", "You aren't a member of that room!")
+						return
+					}
+
+					//finally passed the tests... lets add to the invite list of uids
+					r.InvitedUIDs[invuid] = time.Now().String()
+				}
+
+				name := rooms[room].FriendlyName
+				(*invuser.So).Emit("inviteusertoroom", `{"room":"`+room+`", "name":"`+name+`"}`)
+			}
+		} else {
+			so.Emit("auth_error", "Invalid uid")
+		}
+	})
+
+	so.On("userinfo", func(msg string) {
+		g, _ := gabs.ParseJSON([]byte(msg))
+
+		_, ok := extractAndCheckToken(so, g)
+		if !ok {
+			return
+		}
+
+		uid := g.Path("uid").Data().(string)
+		u, uok := users[uid]
+		if uok {
+			so.Emit("userinfo", publicUserString(u))
+		} else {
+			so.Emit("auth_error", "Invalid uid")
+		}
+	})
+
+	so.On("onlineusers", func(msg string) {
+		g, _ := gabs.ParseJSON([]byte(msg))
+
+		_, ok := extractAndCheckToken(so, g)
+		if !ok {
+			return
+		}
+
+		sendOnlineUserList(so)
+	})
+
+	so.On("ping", func(msg string) {
+		g, _ := gabs.ParseJSON([]byte(msg))
+
+		uid, ok := extractAndCheckToken(so, g)
+		if !ok {
+			return
+		}
+
+		//TODO optimize for network performance
+		_, ok2 := onlineusers[uid]
+		if ok2 {
+			onlineusers[uid].LastAct = time.Now()
+		}
+	})
+
+	so.On("invitenewuser", func(msg string) {
+		//log.Println(msg)
+		g, _ := gabs.ParseJSON([]byte(msg))
+
+		uid, ok := extractAndCheckToken(so, g)
+		if !ok {
+			return
+		}
+
+		em := g.Path("email").Data().(string)
+		fmt.Println(uid, "invited", em)
+
+		//TODO email invite
+		id := uuid.NewV4().String()
+		invites[id] = em
+
+		so.Emit("invitenewuser", "{\"key\": \""+id+"\"}")
+	})
+
+	so.On("roomlist", func(msg string) {
+		g, _ := gabs.ParseJSON([]byte(msg))
+
+		_, ok := extractAndCheckToken(so, g)
+		if !ok {
+			return
+		}
+
+		so.Emit("roomlist", createRoomList())
+	})
+
+	so.On("ban", func(msg string) {
+		g, _ := gabs.ParseJSON([]byte(msg))
+
+		_, ok := extractAndCheckToken(so, g)
+		if !ok {
+			return
+		}
+
+		//TODO save/load bans to disk
+		pass := g.Path("pass").Data().(string)
+		banid := g.Path("uid").Data().(string)
+
+		if pass == adminpass {
+			banlist[banid] = time.Now().String()
+			so.Emit("ban", "Banned")
+		} else {
+			so.Emit("auth_error", "Bad admin password")
+		}
+	})
+
+	so.On("unban", func(msg string) {
+		g, _ := gabs.ParseJSON([]byte(msg))
+
+		_, ok := extractAndCheckToken(so, g)
+		if !ok {
+			return
+		}
+
+		//TODO save/load bans to disk
+		pass := g.Path("pass").Data().(string)
+		banid := g.Path("uid").Data().(string)
+
+		if pass == adminpass {
+			delete(banlist, banid)
+			so.Emit("ban", "Unbanned")
+		} else {
+			so.Emit("auth_error", "Bad admin password")
+			return
+		}
+	})
+
+	so.On("createroom", func(msg string) {
+		g, _ := gabs.ParseJSON([]byte(msg))
+
+		uid, ok := extractAndCheckToken(so, g)
+		if !ok {
+			return
+		}
+
+		name := g.Path("roomname").Data().(string)
+		dur1h, _ := time.ParseDuration("1h")
+		dur30s, _ := time.ParseDuration("30s")
+		roomid := uuid.NewV4().String()
+
+		for _, v := range rooms {
+			if v.FriendlyName == name {
+				so.Emit("auth_error", "Room already exists")
+				return
+			}
+		}
+
+		rooms[roomid] = createRoom(name, roomid, false, uid, dur1h, dur30s, "", 100)
+		addToRoom(so, uid, roomid)
+	})
+
+	so.On("leave", func(msg string) {
+		g, _ := gabs.ParseJSON([]byte(msg))
+
+		uid, ok := extractAndCheckToken(so, g)
+		if !ok {
+			return
+		}
+		so.Leave(g.Path("room").Data().(string))
+		broadcastUserLeave(g.Path("room").Data().(string), uid, so)
+	})
+
+	so.On("join", func(msg string) {
+		g, _ := gabs.ParseJSON([]byte(msg))
+
+		uid, ok := extractAndCheckToken(so, g)
+		if !ok {
+			return
+		}
+
+		room := ""
+		if g.Path("roomid").Data() != nil {
+			roomid := g.Path("roomid").Data().(string)
+			_, ok := rooms[roomid]
+			if ok {
+				room = roomid
+			}
+		} else {
+			roomname := g.Path("roomname").Data().(string)
+			for k, v := range rooms {
+				if v.FriendlyName == roomname {
+					room = k
+					break
+				}
+			}
+		}
+
+		if room == "" {
+			so.Emit("auth_error", "Room not found")
+			return
+		}
+
+		_, inroom := rooms[room].MemberUIDs[uid]
+		if !inroom && canJoin(uid, room, true) {
+			addToRoom(so, uid, room)
+		} else if inroom {
+			sendRoomHistory(so, uid, room)
+		}
+	})
+
+	so.On("deletechatm", func(msg string) {
+		g, _ := gabs.ParseJSON([]byte(msg))
+
+		uid, ok := extractAndCheckToken(so, g)
+		if !ok {
+			return
+		}
+
+		room := g.Path("room").Data().(string)
+		msgid := g.Path("msgid").Data().(string)
+
+		for i := 0; i < len(rooms[room].Messages); i++ {
+			m := rooms[room].Messages[i]
+			if m.Path("msgid").Data().(string) == msgid {
+				if m.Path("uid").Data().(string) == uid {
+					so.Emit("deletechatm", msgid)
+					so.BroadcastTo(room, "deletechatm", msgid)
+					rooms[room].Messages = append(rooms[room].Messages[:i], rooms[room].Messages[i+1:]...)
+				} else {
+					so.Emit("auth_error", "Invalid UID, not your message")
+				}
+				return
+			}
+		}
+	})
+
+	so.On("chatm", func(msg string) {
+		//log.Println(msg)
+		g, _ := gabs.ParseJSON([]byte(msg))
+
+		uid, ok := extractAndCheckToken(so, g)
+		if !ok {
+			so.Emit("auth_error", "Invalid Room")
+			return
+		}
+
+		//TODO message size limit enforcement
+
+		g.SetP("", "t")    //clear full token
+		g.SetP(uid, "uid") //set uid and user info
+		g.SetP(time.Now().Unix(), "time")
+		g.SetP(users[uid].Path("nick").Data().(string), "nick")
+		g.SetP(uuid.NewV4().String(), "msgid")
+		g.SetP(users[uid].Path("avatar").Data().(string), "avatar")
+
+		//validate if user is in this room
+		if g.Path("room").Data() == nil {
+			so.Emit("auth_error", "Invalid Room: "+msg)
+			return
+		}
+		roomtmp := g.Path("room").Data().(string)
+		room := ""
+		inrooms := so.Rooms()
+		for i := 0; i < len(inrooms); i++ {
+			if inrooms[i] == roomtmp {
+				room = roomtmp
+			}
+		}
+		if room == "" {
+			so.Emit("auth_error", "Invalid Room")
+			return
+		}
+
+		g.SetP(rooms[room].FriendlyName, "name")
+
+		//validate duration length
+		dur, err := time.ParseDuration(g.Path("dur").Data().(string))
+		if err != nil {
+			g.SetP(strconv.Itoa(int(rooms[room].MaxExpTime.Seconds()))+"s", "dur")
+		} else {
+			if dur > rooms[room].MaxExpTime {
+				dur = rooms[room].MaxExpTime
+				g.SetP(strconv.Itoa(int(dur.Seconds()))+"s", "dur")
+			}
+			if dur < rooms[room].MinExpTime {
+				dur = rooms[room].MinExpTime
+				g.SetP(strconv.Itoa(int(dur.Seconds()))+"s", "dur")
+			}
+		}
+
+		rooms[room].Messages = append(rooms[room].Messages, g)
+		so.Emit("chatm", g.String())
+		so.BroadcastTo(room, "chatm", g.String())
+	})
+}
+
+func sendOnlineUserList(so socketio.Socket) {
+	cu, _ := gabs.ParseJSON([]byte("{}"))
+	uids := []string{}
+	nicks := []string{}
+	for k := range onlineusers {
+		uids = append(uids, k)
+		nicks = append(nicks, users[k].Path("nick").Data().(string))
+	}
+	cu.SetP(uids, "uids")
+	cu.SetP(nicks, "nicks")
+
+	so.Emit("onlineusers", cu.String())
+}
+
+func broadcastUserLeave(room string, uid string, so socketio.Socket) {
+	bc, _ := gabs.ParseJSON([]byte("{}"))
+	bc.SetP(users[uid].Path("uid").Data().(string), "uid")
+	bc.SetP(room, "room")
+	so.BroadcastTo(room, "leave", bc.String())
+	so.Emit("leave", bc.String())
 }
 
 func createRoomList() string {
@@ -416,6 +563,27 @@ func createRoomList() string {
 	}
 
 	return list.String()
+}
+
+func onlineUserTimeout(server *socketio.Server) {
+	d, _ := time.ParseDuration("300s") //5 minute timeout
+	for {
+		for k, v := range onlineusers {
+			diff := time.Now().Sub(v.LastAct)
+			if diff > d {
+				delete(onlineusers, k)
+
+				rms := (*v.So).Rooms()
+				for i := 0; i < len(rms); i++ {
+					broadcastUserLeave(rms[i], k, *v.So)
+				}
+
+				(*v.So).BroadcastTo("lobby", "userdisconnect", `{"uid":"`+k+`"}`)
+			}
+		}
+
+		time.Sleep(d)
+	}
 }
 
 func expireHistory(server *socketio.Server) {
@@ -666,8 +834,7 @@ func signup(w http.ResponseWriter, r *http.Request) {
 				r.FormValue("phone"),
 				r.FormValue("url"),
 				r.FormValue("desc"),
-				r.FormValue("avatar"),
-				invite)
+				r.FormValue("avatar"))
 
 			users[token.Path("uid").Data().(string)] = token
 
@@ -676,7 +843,9 @@ func signup(w http.ResponseWriter, r *http.Request) {
 
 			addToRoom(nil, token.Path("uid").Data().(string), "lobby")
 
+			//TODO use templates
 			fmt.Fprintf(w, `<html>`)
+			fmt.Fprintf(w, `<strong>A message from your invite: </strong>`+invite+`<br><br>`)
 			fmt.Fprintf(w, "Token (KEEP THIS SOMEWHERE SAFE OR SAVE THE LOGIN LINK): <br><textarea rows='10' cols='60'>%s</textarea><br><br>", base64.StdEncoding.EncodeToString(etok))
 			fmt.Fprintf(w, "<a href='/#%s'>Assemble Chat Login</a> BOOKMARK THIS! <strong>DO NOT SHARE THIS LINK</strong>", base64.StdEncoding.EncodeToString(etok))
 			fmt.Fprintf(w, `</html>`)
@@ -691,14 +860,14 @@ func signup(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func createNewUserToken(nick string, name string, email string, phone string, url string, desc string, avatar string, invite string) (*gabs.Container, error) {
+func createNewUserToken(nick string, name string, email string, phone string, url string, desc string, avatar string) (*gabs.Container, error) {
 
 	uid := uuid.NewV4().String()
 	privid := uuid.NewV4().String()
 	token, err := gabs.ParseJSON([]byte(`{
 		"uid":null, "privid":null, "nick":null,
 		"name":null, "email":null, "phone":null,
-		"url":null, "desc":null, "avatar":null, "invite":null
+		"url":null, "desc":null, "avatar":null
 		}`))
 
 	token.SetP(uid, "uid")
@@ -711,7 +880,6 @@ func createNewUserToken(nick string, name string, email string, phone string, ur
 	token.SetP(url, "url")
 	token.SetP(desc, "desc")
 	token.SetP(avatar, "avatar")
-	token.SetP(invite, "invite")
 
 	return token, err
 }

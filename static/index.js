@@ -44,6 +44,32 @@ $(document).ready(function(){
         $("#imgupFile").click();
     });
 
+    sendPing();
+    function sendPing() {
+        console.log("Ping");
+        socket.emit("ping", JSON.stringify({"t": token}));
+        setTimeout(sendPing, 149000);//~2.5 minutes. User timeouts every 5 minutes
+        //TODO bandwidth optimize this! probably no need to send a full on token each time.
+    }
+
+    $("#messages").on('click', '.userprofilelink', function(e) {
+        socket.emit("userinfo", JSON.stringify({"t": token, "uid": $(e.currentTarget).attr("data-uid")}));
+    });
+
+    $("#inviteusertoroom").on('click', function(e) {
+        var uid = $(e.currentTarget).attr("data-uid");
+        socket.emit("inviteusertoroom", JSON.stringify({"t": token, "uid": uid, "room": cur_room}));
+    });
+
+    $('#messages').on('click', 'a.joinroom', function(ev){
+        var rm = $(ev.currentTarget).attr("data-room");
+        socket.emit("join", JSON.stringify({"t": token, "roomid": rm}));
+        if (typeof rooms[rm]!="undefined") {
+            switchRoom(rm);
+            updateSidebar();
+        }
+        return false;
+    });
 });
 
 //setup notifications
@@ -117,7 +143,7 @@ $("#btnduration").on('click', function() {
     }
 });
 $("#btninvitenewuser").on('click', function() {
-    socket.emit("invitenewuser", JSON.stringify({"t": token, "email": prompt("Enter the name the user to invite (optional):")}));
+    socket.emit("invitenewuser", JSON.stringify({"t": token, "email": prompt("Enter a message for the invited user (optional):")}));
 });
 $("#btninviteroom").on('click', function() {
     console.log('not implemented');
@@ -140,7 +166,7 @@ socket.on('chatm', function(d){
     $("#m").prop('disabled', false);
 
     try {
-        if (Notification.permission==="granted" && (cur_room!=d.room || !document.hasFocus()))
+        if (Notification.permission==="granted" && (cur_room!=d.room || !document.hasFocus()) && d.m.indexOf("data:image/")!=0)
             var notification = new Notification("["+d.name+"] "+d.nick+": "+d.m.substring(0,256)+" (Assemble Chat)");
     }catch (err) {
         console.log(err);
@@ -152,28 +178,58 @@ socket.on('chatm', function(d){
     }
 });
 
-socket.on('roomlist', function(d){
-    d=JSON.parse(d);
-    var m = "";
-    for (var k in d) {
-        m+="<a class='joinroom' data-room='"+k+"'>"+d[k]+"</a>"
-    }
+socket.on('inviteusertoroom', function(d) {
+    var d=JSON.parse(d);
+    var m = "<span class='prefix'>You've been invited to join </span>";
+    m+="<a class='joinroom' data-room='"+d.room+"'>"+d.name+"</a>";
+    m+="<div class='clearfloat'></div>";
     $('#messages').append($('<li>').html(m));
-    $('#messages li a.joinroom').on('click', function(ev){
-        var rm = $(ev.currentTarget).attr("data-room");
-        socket.emit("join", JSON.stringify({"t": token, "roomid": rm}));
-        if (typeof rooms[rm]!="undefined") {
-            switchRoom(rm);
-            updateSidebar();
-        }
-        return false;
-    });
+
+    scrollToBottom();
+});
+
+socket.on('userinfo', function(d) {
+    console.log(d);
+    var d=JSON.parse(d);
+
+    $("#userprofile .avatar").html("<img src='"+d.avatar+"'></img>");
+    $("#userprofile .nick").text(d.nick);
+    $("#userprofile .name").text(d.name);
+    $("#userprofile .email").text(d.email);
+    $("#userprofile .phone").text(d.phone);
+    $("#userprofile .url").text(d.url);
+    $("#userprofile .desc").html(d.desc);
+    $("#inviteusertoroom").attr("data-uid",d.uid);
+
+    $("#userprofile").modal();
+})
+
+socket.on('onlineusers', function(d) {
+    var d=JSON.parse(d);
+    var m = "<span class='prefix'>Online Users: </span>";
+    for (var i=0; i<d.uids.length; i++) {
+        m+="<a class='userprofilelink onlineuser' data-uid='"+d.uids[i]+"'>"+d.nicks[i]+"</a>";
+    }
+    m+="<div class='clearfloat'></div>";
+    $('#messages').append($('<li>').html(m));
+
+    scrollToBottom();
+});
+
+socket.on('roomlist', function(d){
+    var d=JSON.parse(d);
+    var m = "<span class='prefix'>Room List: </span>";
+    for (var k in d) {
+        m+="<a class='joinroom' data-room='"+k+"'>"+d[k]+"</a>";
+    }
+    m+="<div class='clearfloat'></div>";
+    $('#messages').append($('<li>').html(m));
 
     scrollToBottom();
 });
 
 socket.on('history', function(d){
-    d=JSON.parse(d);
+    var d=JSON.parse(d);
     //console.log(d);
     for (var i=0; i<d.history.length; i++) {
         appendChatMessage(d.room,d.name,d.history[i].nick,d.history[i].m,d.history[i].msgid, d.history[i].avatar,d.history[i].time);
@@ -185,7 +241,7 @@ socket.on('history', function(d){
 });
 
 socket.on('join', function(d){
-    d=JSON.parse(d);
+    var d=JSON.parse(d);
     $('#messages').append($('<li>').text("Joined "+d.name));
     if (!(d.name in roomnames)) {
         rooms[d.room] = {users: [], messages: [], friendlyname: d.name, mcount: 0};
@@ -196,7 +252,7 @@ socket.on('join', function(d){
 });
 
 socket.on('joined', function(d){
-    d=JSON.parse(d);
+    var d=JSON.parse(d);
     $('#messages').append($('<li>').text(d.nick +" joined "+d.name));
     rooms[d.room].users.push({uid:d.uid, nick:d.nick});
 });
@@ -214,7 +270,7 @@ socket.on('auth', function(d){
 });
 
 socket.on('invitenewuser', function(d){
-    d=JSON.parse(d);
+    var d=JSON.parse(d);
     $('#messages').append($('<li>').text("Invite Key: "+d.key));
 });
 
@@ -309,8 +365,11 @@ function appendChatMessage(room, roomname, nick, m, id, avatar, time) {
         avatarimg = "<span class='glyphicon glyphicon-user avatar'></span>";
     }
 
+    //TODO
+    var uid = "";
+
     $('#messages').append($('<li>')
-        .html("<div class='useravatar'>"+avatarimg+"</div><div class='messagecontainer'><span class='nick'>"+nick+"</span> <span class='time'>"+time+"</span> <br><span class='messagetext'>"+m+"</span>")
+        .html("<div class='useravatar'>"+avatarimg+"</div><div class='messagecontainer'><a data-uid='"+uid+"' class='userprofilelink nick'>"+nick+"</a> <span class='time'>"+time+"</span> <br><span class='messagetext'>"+m+"</span>")
         .attr("data-msgid", id)
         .attr("data-room", room)
         .attr("title",id)
@@ -321,9 +380,11 @@ function appendChatMessage(room, roomname, nick, m, id, avatar, time) {
             requestDeleteMessage(msgid);
             return false;
         })
+        /*
         .on("click", function(ev) {
             console.log("Show user info"); //TODO
         })
+        */
     );
 }
 
@@ -442,6 +503,9 @@ function handleCommand(socket,c) {
             break;
         case "/roomlist":
             socket.emit("roomlist",JSON.stringify({"t": token}));
+            break;
+        case "/onlineusers":
+            socket.emit("onlineusers",JSON.stringify({"t": token}));
             break;
         default:
             $('#messages').append($('<li>').text("Unknown command"));

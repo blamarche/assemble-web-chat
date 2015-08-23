@@ -47,7 +47,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
                     <div id="btncreateroom" title="Create A New Room"><button><span class="glyphicon glyphicon-plus-sign"></span></button></div>
                     <div id="btnduration" title="Set message duration"><button><span class="glyphicon glyphicon-time"></span></button></div>
                     <div id="btninvitenewuser" title="Invite a new user to Assemble"><button><span class="glyphicon glyphicon-envelope"></span></button></div>
-                    <div id="btninviteroom" title="Invite a user to this room"><button><span class="glyphicon glyphicon-share-alt"></span></button></div>
+                    <!--<div id="btninviteroom" title="Invite a user to this room"><button><span class="glyphicon glyphicon-share-alt"></span></button></div>-->
                     <div class="clearfloat"></div>
                 </li>
             </ul>
@@ -66,7 +66,32 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
     </div>
 
     <div id="dialogs">
-
+        <div id="userprofile" class="modal fade">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">User Profile</h4>
+              </div>
+              <div class="modal-body">
+                <table>
+                    <tr><td></td><td>
+                    <div class="userprofile avatar"></div></td></tr>
+                    <tr><td>Nick: </td><td><div class="userprofile nick"></div></td></tr>
+                    <tr><td>Name: </td><td><div class="userprofile name"></div></td></tr>
+                    <tr><td>Email: </td><td><div class="userprofile email"></div></td></tr>
+                    <tr><td>Phone: </td><td><div class="userprofile phone"></div></td></tr>
+                    <tr><td>Url: </td><td><div class="userprofile url"></div></td></tr>
+                    <tr><td>Description: </td><td><div class="userprofile desc"></div></td></tr>
+                </table>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                <button id="inviteusertoroom" type="button" class="btn btn-success" data-dismiss="modal">Invite To Room</button>
+              </div>
+            </div><!-- /.modal-content -->
+          </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
     </div>
 
     <script src="/index.js"></script>
