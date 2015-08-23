@@ -46,7 +46,6 @@ $(document).ready(function(){
 
     sendPing();
     function sendPing() {
-        console.log("Ping");
         socket.emit("ping", JSON.stringify({"t": token}));
         setTimeout(sendPing, 149000);//~2.5 minutes. User timeouts every 5 minutes
         //TODO bandwidth optimize this! probably no need to send a full on token each time.
@@ -75,7 +74,6 @@ $(document).ready(function(){
 //setup notifications
 if ("Notification" in window) {
     if (Notification.permission === "granted") {
-        //var notification = new Notification("Hi there!");
     } else if (Notification.permission !== 'denied') {
         Notification.requestPermission(function (permission) {
             if (permission === "granted") {
@@ -149,7 +147,6 @@ $("#btninviteroom").on('click', function() {
     console.log('not implemented');
 });
 
-//TODO troubleshoot delay in data trasmission of sockets?
 socket.on('connect', function(d) {
     socket.emit("auth", token);
 });
@@ -157,7 +154,7 @@ socket.on('connect', function(d) {
 socket.on('chatm', function(d){
     //console.log(d);
     d=JSON.parse(d);
-    appendChatMessage(d.room,d.name,d.nick,d.m,d.msgid,d.avatar,d.time);
+    appendChatMessage(d.uid,d.room,d.name,d.nick,d.m,d.msgid,d.avatar,d.time);
     rooms[d.room].messages.push(d);
     scrollToBottom();
     if ($("#m").prop('disabled')==true) {
@@ -232,7 +229,7 @@ socket.on('history', function(d){
     var d=JSON.parse(d);
     //console.log(d);
     for (var i=0; i<d.history.length; i++) {
-        appendChatMessage(d.room,d.name,d.history[i].nick,d.history[i].m,d.history[i].msgid, d.history[i].avatar,d.history[i].time);
+        appendChatMessage(d.history[i].uid,d.room,d.name,d.history[i].nick,d.history[i].m,d.history[i].msgid, d.history[i].avatar,d.history[i].time);
         rooms[d.room].messages.push(d.history[i]);
     }
 
@@ -275,7 +272,6 @@ socket.on('invitenewuser', function(d){
 });
 
 socket.on('deletechatm', function(d){
-    //appendChatMessage("lobby","SYSTEM","Message deleted "+d,"");
     $("#messages li[data-msgid='"+d+"']").html("<i>Removed message</i>");
 });
 
@@ -311,7 +307,7 @@ function scrollToBottom() {
     $(window).scrollTop($('body')[0].scrollHeight);
 }
 
-function appendChatMessage(room, roomname, nick, m, id, avatar, time) {
+function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
     var hide = "";
     if (room!=cur_room) {
         hide="hidden";
@@ -353,7 +349,6 @@ function appendChatMessage(room, roomname, nick, m, id, avatar, time) {
         avatar = "";
     }
 
-    //TODO optimize avatar
     if (typeof time=="undefined") {
         time="";
     } else {
@@ -364,9 +359,6 @@ function appendChatMessage(room, roomname, nick, m, id, avatar, time) {
     if (avatar=="") {
         avatarimg = "<span class='glyphicon glyphicon-user avatar'></span>";
     }
-
-    //TODO
-    var uid = "";
 
     $('#messages').append($('<li>')
         .html("<div class='useravatar'>"+avatarimg+"</div><div class='messagecontainer'><a data-uid='"+uid+"' class='userprofilelink nick'>"+nick+"</a> <span class='time'>"+time+"</span> <br><span class='messagetext'>"+m+"</span>")
@@ -398,7 +390,7 @@ function requestDeleteMessage(msgid) {
 
 function switchRoom(room) {
     if (typeof rooms[room]=="undefined") {
-        appendChatMessage("lobby", "Lobby", "SYSTEM", "Unknown room", "");
+        appendChatMessage("","lobby", "Lobby", "SYSTEM", "Unknown room", "");
     } else {
         cur_room = room;
     }
@@ -416,7 +408,7 @@ function switchRoom(room) {
 function switchRoomByName(roomname) {
     var new_room = roomnames[roomname];
     if (new_room==null || typeof roomnames[roomname]=="undefined") {
-        appendChatMessage("lobby", "Lobby", "SYSTEM", "Unknown room", "");
+        appendChatMessage("","lobby", "Lobby", "SYSTEM", "Unknown room", "");
     } else {
         switchRoom(new_room);
     }
