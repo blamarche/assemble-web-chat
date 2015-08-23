@@ -60,6 +60,17 @@ $(document).ready(function(){
         socket.emit("inviteusertoroom", JSON.stringify({"t": token, "uid": uid, "room": cur_room}));
     });
 
+    $("#createnewroom").on('click', function(e) {
+        var name, isprivate, maxexptime, minexptime;
+        name=$("#createroom .roomname").val();
+        isprivate=$("#createroom .isprivate:checked").length;
+        maxexptime=$("#createroom .maxexptime").val();
+        minexptime=$("#createroom .minexptime").val();
+        socket.emit("createroom", JSON.stringify({"t": token, "roomname": name, "maxexptime": maxexptime, "minexptime": minexptime, "isprivate": (isprivate!=0)}));
+
+        $("#createroom .roomname").val("");
+    });
+
     $('#messages').on('click', 'a.joinroom', function(ev){
         var rm = $(ev.currentTarget).attr("data-room");
         socket.emit("join", JSON.stringify({"t": token, "roomid": rm}));
@@ -68,6 +79,10 @@ $(document).ready(function(){
             updateSidebar();
         }
         return false;
+    });
+
+    $('#messageduration .currentduration').change(function(e) {
+        cur_dur = $('#messageduration .currentduration').val();
     });
 });
 
@@ -101,7 +116,7 @@ socket.io.on('reconnect_error', function(e) {
 var rooms = {};
 var roomnames = {};
 var cur_room = "";
-var cur_dur = "24h";
+var cur_dur = "48h";
 var token = window.location.hash.substring(1);
 
 $(window).on('beforeunload', function(){
@@ -128,23 +143,29 @@ $("#btnroomlist").on('click', function() {
     socket.emit("roomlist",JSON.stringify({"t": token}));
 });
 $("#btncreateroom").on('click', function() {
-    var roomname = prompt("Enter the room name: ");
-    socket.emit("createroom", JSON.stringify({"t": token, "roomname": roomname, "private":false}));
+    //var roomname = prompt("Enter the room name: ");
+    //socket.emit("createroom", JSON.stringify({"t": token, "roomname": roomname, "private":false}));
+    $("#createroom").modal();
 });
 $("#btnduration").on('click', function() {
+    $("#messageduration").modal();
+    /*
     var m = prompt('Enter the desired default expiration time for your messages (30s, 1m, 10m, 24h, etc): ');
-    var unit = m.substring(m.length-1);
-    if (unit!="s"&&unit!="m"&&unit!="h") {
-        alert("Invalid value.");
-    } else {
-        cur_dur = m;
+    if (m!=null) {
+        var unit = m.substring(m.length-1);
+        if (unit!="s"&&unit!="m"&&unit!="h") {
+            alert("Invalid value.");
+        } else {
+            cur_dur = m;
+        }
     }
+    */
 });
 $("#btninvitenewuser").on('click', function() {
     socket.emit("invitenewuser", JSON.stringify({"t": token, "email": prompt("Enter a message for the invited user (optional):")}));
 });
-$("#btninviteroom").on('click', function() {
-    console.log('not implemented');
+$("#btnuserlist").on('click', function() {
+    socket.emit("onlineusers",JSON.stringify({"t": token}));
 });
 
 socket.on('connect', function(d) {
@@ -155,7 +176,6 @@ socket.on('chatm', function(d){
     //console.log(d);
     d=JSON.parse(d);
     appendChatMessage(d.uid,d.room,d.name,d.nick,d.m,d.msgid,d.avatar,d.time);
-    rooms[d.room].messages.push(d);
     scrollToBottom();
     if ($("#m").prop('disabled')==true) {
         $("#m").focus();
@@ -175,6 +195,12 @@ socket.on('chatm', function(d){
     }
 });
 
+socket.on('leave', function(room) {
+    delete rooms[room];
+    //TODO is this delete working right?
+    $("#sidebar li[data-room='"+room+"']").remove();
+});
+
 socket.on('inviteusertoroom', function(d) {
     var d=JSON.parse(d);
     var m = "<span class='prefix'>You've been invited to join </span>";
@@ -186,7 +212,6 @@ socket.on('inviteusertoroom', function(d) {
 });
 
 socket.on('userinfo', function(d) {
-    console.log(d);
     var d=JSON.parse(d);
 
     $("#userprofile .avatar").html("<img src='"+d.avatar+"'></img>");
@@ -230,7 +255,6 @@ socket.on('history', function(d){
     //console.log(d);
     for (var i=0; i<d.history.length; i++) {
         appendChatMessage(d.history[i].uid,d.room,d.name,d.history[i].nick,d.history[i].m,d.history[i].msgid, d.history[i].avatar,d.history[i].time);
-        rooms[d.room].messages.push(d.history[i]);
     }
 
     updateSidebar();
@@ -239,9 +263,22 @@ socket.on('history', function(d){
 
 socket.on('join', function(d){
     var d=JSON.parse(d);
-    $('#messages').append($('<li>').text("Joined "+d.name));
+    if (d.minexptime.indexOf("h0m")!=-1) {
+        d.minexptime = d.minexptime.replace("0m","");
+        d.minexptime = d.minexptime.replace("0s","");
+    }
+    if (d.minexptime.indexOf("m0s")!=-1)
+        d.minexptime = d.minexptime.replace("0s","");
+    if (d.maxexptime.indexOf("h0m")!=-1) {
+        d.maxexptime = d.maxexptime.replace("0m","");
+        d.maxexptime = d.maxexptime.replace("0s","");
+    }
+    if (d.maxexptime.indexOf("m0s")!=-1)
+        d.maxexptime = d.maxexptime.replace("0s","");
+
+    $('#messages').append($('<li>').text("Joined "+d.name+" ("+d.minexptime+" - "+d.maxexptime+")"));
     if (!(d.name in roomnames)) {
-        rooms[d.room] = {users: [], messages: [], friendlyname: d.name, mcount: 0};
+        rooms[d.room] = {users: [], messages: [], friendlyname: d.name, mcount: 0, minexptime: d.minexptime, maxexptime: d.maxexptime};
         roomnames[d.name] = d.room;
         switchRoom(d.room);
     }
@@ -282,10 +319,15 @@ function updateSidebar() {
         if ($("#sidebar li[data-room='"+r+"']").length == 0) {
             $("#sidebar").append($("<li>")
                 .attr("data-room", r)
+                .attr("title", rm.minexptime+" - "+rm.maxexptime)
                 .html("<div>"+rm.friendlyname+"</div><span></span>")
                 .on('click', function(ev) {
                     var rm = $(ev.currentTarget).attr("data-room");
                     switchRoom(rm);
+                })
+                .on('contextmenu', function(ev) {
+                    var rm = $(ev.currentTarget).attr("data-room");
+                    socket.emit("leave", JSON.stringify({"t": token, "room": rm}));
                 })
             );
         }
@@ -448,20 +490,14 @@ function handleCommand(socket,c) {
     switch (ca[0]) {
         case "/help":
             $('#messages').append($('<li>').html(" \
-                /invitenewuser email - Emails and makes an invite key for a new user to signup <br>\
                 /leave - Leaves the current room <br>\
                 /ban admin uid - Bans the UID permanently <br>\
                 /unban admin uid - UnBans the UID <br>\
                 /dur message-duration - Sets your message expiration time (ie: 24h, 10m, 30s, etc) <br>\
                 /join room-name - Attempts to join a room by name <br>\
                 /switch room-name - Switches your chat focus to a room by name <br>\
-                /createpub room-name max-history min-message-duration max-message-duration - Creates a public chat room. max-history is the max number of messages to store. max/min-duration set params for how long messages last (ie: 24h, 10m, 30s, etc) <br>\
                 /roomlist - Lists all public rooms with links to join <br>\
             "));
-            break;
-        case "/invitenewuser":
-            var email = ca[1];
-            socket.emit("invitenewuser", JSON.stringify({"t": token, "email": email}));
             break;
         case "/leave":
             socket.emit("leave", JSON.stringify({"t": token, "room": cur_room}));
@@ -488,10 +524,6 @@ function handleCommand(socket,c) {
             var roomname = c.substring(8);
             switchRoomByName(roomname);
             updateSidebar();
-            break;
-        case "/createpub":
-            var roomname = c.substring(11);
-            socket.emit("createroom", JSON.stringify({"t": token, "roomname": roomname, "private":false}));
             break;
         case "/roomlist":
             socket.emit("roomlist",JSON.stringify({"t": token}));

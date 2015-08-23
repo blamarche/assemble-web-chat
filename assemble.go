@@ -383,8 +383,23 @@ func socketHandlers(so socketio.Socket) {
 		}
 
 		name := g.Path("roomname").Data().(string)
-		dur1h, _ := time.ParseDuration("1h")
+		isprivate := g.Path("isprivate").Data().(bool)
+		minexptime := g.Path("minexptime").Data().(string)
+		maxexptime := g.Path("maxexptime").Data().(string)
+
+		dur24h, _ := time.ParseDuration("24h")
 		dur30s, _ := time.ParseDuration("30s")
+
+		mindur, err := time.ParseDuration(minexptime)
+		if err != nil {
+			mindur = dur30s
+		}
+
+		maxdur, err := time.ParseDuration(maxexptime)
+		if err != nil {
+			maxdur = dur24h
+		}
+
 		roomid := uuid.NewV4().String()
 
 		for _, v := range rooms {
@@ -394,7 +409,7 @@ func socketHandlers(so socketio.Socket) {
 			}
 		}
 
-		rooms[roomid] = createRoom(name, roomid, false, uid, dur1h, dur30s, "", 100)
+		rooms[roomid] = createRoom(name, roomid, isprivate, uid, maxdur, mindur, "", 100)
 		addToRoom(so, uid, roomid)
 	})
 
@@ -405,6 +420,7 @@ func socketHandlers(so socketio.Socket) {
 		if !ok {
 			return
 		}
+		so.Emit("leave", g.Path("room").Data().(string))
 		so.Leave(g.Path("room").Data().(string))
 		broadcastUserLeave(g.Path("room").Data().(string), uid, so)
 	})
@@ -444,6 +460,8 @@ func socketHandlers(so socketio.Socket) {
 			addToRoom(so, uid, room)
 		} else if inroom {
 			sendRoomHistory(so, uid, room)
+		} else {
+			so.Emit("auth_error", "You can't join this room")
 		}
 	})
 
@@ -559,7 +577,9 @@ func createRoomList() string {
 	list, _ := gabs.ParseJSON([]byte("{}"))
 
 	for k, v := range rooms {
-		list.SetP(v.FriendlyName, k)
+		if !v.IsPrivate {
+			list.SetP(v.FriendlyName, k)
+		}
 	}
 
 	return list.String()
@@ -675,14 +695,20 @@ func joinRoom(so socketio.Socket, uid string, room string) {
 	}
 
 	so.Join(k)
-	so.Emit("join", `{"room": "`+k+`", "name": "`+v.FriendlyName+`"}`)
+
+	jo, _ := gabs.ParseJSON([]byte("{}"))
+	jo.SetP(v.MaxExpTime.String(), "maxexptime")
+	jo.SetP(v.MinExpTime.String(), "minexptime")
+	jo.SetP(k, "room")
+	jo.SetP(v.FriendlyName, "name")
+
+	so.Emit("join", jo.String())
 
 	bc, _ := gabs.ParseJSON([]byte("{}"))
 	bc.SetP(users[uid].Path("nick").Data().(string), "nick")
 	bc.SetP(uid, "uid")
 	bc.SetP(k, "room")
 	bc.SetP(v.FriendlyName, "name")
-	//bc.SetP(v.FriendlyName, "name")
 	so.BroadcastTo(k, "joined", bc.String())
 
 	sendRoomHistory(so, uid, room)
