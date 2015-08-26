@@ -1,9 +1,14 @@
 package assemble
 
 import (
+	"crypto/tls"
 	"encoding/base64"
+	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"net/mail"
+	"net/smtp"
 	"time"
 
 	"github.com/Jeffail/gabs"
@@ -20,7 +25,7 @@ type Service struct {
 
 	Cfg         *config.Config
 	Rooms       map[string]*Room
-	Users       map[string]*gabs.Container
+	Users       map[string]*User
 	OnlineUsers map[string]*OnlineUser
 	Invites     map[string]string
 	Banlist     map[string]string
@@ -35,7 +40,7 @@ func NewService(cfg *config.Config, userkey []byte) *Service {
 	s.Cfg = cfg
 
 	s.Rooms = make(map[string]*Room, 100)
-	s.Users = make(map[string]*gabs.Container, 100)
+	s.Users = make(map[string]*User, 100)
 	s.OnlineUsers = make(map[string]*OnlineUser, 100)
 	s.Banlist = make(map[string]string, 100)
 	s.Invites = make(map[string]string, 100)
@@ -85,41 +90,44 @@ func (svc *Service) Start() {
 	}
 }
 
-// CreateRoom adds a room to the services list
-func (svc *Service) CreateRoom(fname, roomid string, isprivate bool, creatoruid string, maxexptime time.Duration, minexptime time.Duration, avatar string, maxhistorylen int) *Room {
-	r := Room{}
-	r.FriendlyName = fname
-	r.RoomID = roomid
-	r.IsPrivate = isprivate
-	r.CreatorUID = creatoruid
-	r.MaxExpTime = maxexptime
-	r.MinExpTime = minexptime
-	r.Avatar = avatar
-	r.MaxHistoryLen = maxhistorylen
-
-	r.Messages = make([]*gabs.Container, 0)
-	r.MemberUIDs = make(map[string]string, 10)
-	r.InvitedUIDs = make(map[string]string, 10)
-	/*
-		if r.CreatorUID != "" {
-			r.MemberUIDs[r.CreatorUID] = r.CreatorUID //ineffecient, perhaps a pointer to the actual gabs object
-		}
-	*/
-	svc.Rooms[roomid] = &r
-
-	return &r
-}
-
 func (svc *Service) alertSender() {
+	wait, err := time.ParseDuration(svc.Cfg.LastAlertWait)
+	_ = wait
+	if err != nil {
+		log.Fatal("LastAlertWait invalid value")
+	}
 
+	d, _ := time.ParseDuration("5s")
+	for {
+		for k, v := range svc.Rooms {
+			if k != "lobby" && len(v.Messages) > 0 {
+				lastmsgstamp := v.Messages[len(v.Messages)-1].Path("time").Data().(int64)
+
+				//TODO client-side option with auth that disables notifications per-user
+				for uid := range v.MemberUIDs {
+					_, isonline := svc.OnlineUsers[uid]
+					if !isonline {
+						alertaddr := svc.Users[uid].Token.Path("alertaddress").Data()
+						if alertaddr != nil && lastmsgstamp > svc.Users[uid].LastAlert.Unix() && lastmsgstamp > svc.Users[uid].LastAct.Unix() {
+							diff := time.Now().Sub(svc.Users[uid].LastAlert)
+							if diff > wait {
+								svc.Users[uid].LastAlert = time.Now()
+								svc.SendAlert(alertaddr.(string), "Assemble", "New messages in "+v.FriendlyName)
+							}
+						}
+					}
+				}
+			}
+		}
+		time.Sleep(d)
+	}
 }
 
 func (svc *Service) onlineUserTimeout() {
-	//server := svc.SocketServer
 	d, _ := time.ParseDuration(svc.Cfg.UserTimeout) //5 minute timeout
 	for {
 		for k, v := range svc.OnlineUsers {
-			diff := time.Now().Sub(v.LastAct)
+			diff := time.Now().Sub(v.LastPing)
 			if diff > d {
 				delete(svc.OnlineUsers, k)
 
@@ -182,11 +190,100 @@ func (svc *Service) expireHistory() {
 	}
 }
 
+// CreateRoom adds a room to the services list
+func (svc *Service) CreateRoom(fname, roomid string, isprivate bool, creatoruid string, maxexptime time.Duration, minexptime time.Duration, avatar string, maxhistorylen int) *Room {
+	r := Room{}
+	r.FriendlyName = fname
+	r.RoomID = roomid
+	r.IsPrivate = isprivate
+	r.CreatorUID = creatoruid
+	r.MaxExpTime = maxexptime
+	r.MinExpTime = minexptime
+	r.Avatar = avatar
+	r.MaxHistoryLen = maxhistorylen
+
+	r.Messages = make([]*gabs.Container, 0)
+	r.MemberUIDs = make(map[string]string, 10)
+	r.InvitedUIDs = make(map[string]string, 10)
+	/*
+		if r.CreatorUID != "" {
+			r.MemberUIDs[r.CreatorUID] = r.CreatorUID //ineffecient, perhaps a pointer to the actual gabs object
+		}
+	*/
+	svc.Rooms[roomid] = &r
+
+	return &r
+}
+
 //TODO STILL NEEDS REFACTORING
 
-func (svc *Service) SendAlert(to, subject, message string) {
+func (svc *Service) SendAlert(toaddr, subject, message string) {
 	if svc.Cfg.SMTP.Enabled {
+		//log.Println("alert", toaddr, subject, message)
+		from := mail.Address{"", svc.Cfg.SMTP.From}
+		to := mail.Address{"", toaddr}
+		subj := subject
+		body := message
 
+		// Setup headers
+		headers := make(map[string]string)
+		headers["From"] = from.String()
+		headers["To"] = to.String()
+		headers["Subject"] = subj
+
+		// Setup message
+		message := ""
+		for k, v := range headers {
+			message += fmt.Sprintf("%s: %s\r\n", k, v)
+		}
+		message += "\r\n" + body
+
+		// Connect to the SMTP Server
+		servername := svc.Cfg.SMTP.SslHostPort
+		host, _, _ := net.SplitHostPort(servername)
+		auth := smtp.PlainAuth("", svc.Cfg.SMTP.Username, svc.Cfg.SMTP.Password, host)
+
+		// TLS config
+		tlsconfig := &tls.Config{
+			InsecureSkipVerify: true,
+			ServerName:         host,
+		}
+
+		//hardcoded to support TLS only (ie. port 465 smtp servers)
+		conn, err := tls.Dial("tcp", servername, tlsconfig)
+		if err != nil {
+			log.Println("smtperr", err)
+		}
+		c, err := smtp.NewClient(conn, host)
+		if err != nil {
+			log.Println("smtperr", err)
+		}
+
+		// Auth
+		if err = c.Auth(auth); err != nil {
+			log.Println("smtperr", err)
+		}
+		// To && From
+		if err = c.Mail(from.Address); err != nil {
+			log.Println("smtperr", err)
+		}
+		if err = c.Rcpt(to.Address); err != nil {
+			log.Println("smtperr", err)
+		}
+		// Data
+		w, err := c.Data()
+		if err != nil {
+			log.Println("smtperr", err)
+		}
+		_, err = w.Write([]byte(message))
+		if err != nil {
+			log.Println("smtperr", err)
+		}
+		err = w.Close()
+		if err != nil {
+			log.Println("smtperr", err)
+		}
+		c.Quit()
 	}
 }
 
@@ -196,7 +293,7 @@ func (svc *Service) SendOnlineUserList(so socketio.Socket) {
 	nicks := []string{}
 	for k := range svc.OnlineUsers {
 		uids = append(uids, k)
-		nicks = append(nicks, svc.Users[k].Path("nick").Data().(string))
+		nicks = append(nicks, svc.Users[k].Token.Path("nick").Data().(string))
 	}
 	cu.SetP(uids, "uids")
 	cu.SetP(nicks, "nicks")
@@ -206,7 +303,7 @@ func (svc *Service) SendOnlineUserList(so socketio.Socket) {
 
 func (svc *Service) BroadcastUserLeave(room string, uid string, so socketio.Socket) {
 	bc, _ := gabs.ParseJSON([]byte("{}"))
-	bc.SetP(svc.Users[uid].Path("uid").Data().(string), "uid")
+	bc.SetP(svc.Users[uid].Token.Path("uid").Data().(string), "uid")
 	bc.SetP(room, "room")
 	so.BroadcastTo(room, "leave", bc.String())
 	so.Emit("leave", bc.String())
@@ -278,7 +375,7 @@ func (svc *Service) JoinRoom(so socketio.Socket, uid string, room string) {
 	so.Emit("join", jo.String())
 
 	bc, _ := gabs.ParseJSON([]byte("{}"))
-	bc.SetP(svc.Users[uid].Path("nick").Data().(string), "nick")
+	bc.SetP(svc.Users[uid].Token.Path("nick").Data().(string), "nick")
 	bc.SetP(uid, "uid")
 	bc.SetP(k, "room")
 	bc.SetP(v.FriendlyName, "name")
@@ -367,14 +464,17 @@ func (svc *Service) ValidateUserToken(so socketio.Socket, msg string) (string, e
 
 	_, ok := svc.Users[uid]
 	if !ok {
-		svc.Users[uid] = token
+		svc.Users[uid] = &User{}
+		svc.Users[uid].LastAlert = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+		svc.Users[uid].LastAct = time.Now()
+		svc.Users[uid].Token = token
 		if so != nil {
 			svc.AddToRoom(so, uid, "lobby")
 		} else {
 			svc.Rooms["lobby"].MemberUIDs[uid] = uid
 		}
 	} else {
-		if svc.Users[uid].Path("privid").Data().(string) != token.Path("privid").Data().(string) {
+		if svc.Users[uid].Token.Path("privid").Data().(string) != token.Path("privid").Data().(string) {
 			return "", &Err{"Bad privID"}
 		}
 	}

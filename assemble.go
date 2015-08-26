@@ -16,8 +16,8 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
 */
 package main
 
-// This is not meant to be clean from the get-go and I'm sure it'll need refactoring
-//TODO investigate first-refresh join of lobby, etc
+//This is not meant to be clean from the get-go and it will need refactoring
+//TODO investigate first-refresh join of rooms not loading in
 
 import (
 	"encoding/base64"
@@ -48,26 +48,28 @@ func main() {
 	defaultinvite := ""
 
 	//read params from terminal
+	cfgfile := "./config.json"
 	if len(os.Args) > 1 {
-		cfgfile := os.Args[1]
+		cfgfile = os.Args[1]
 		if cfgfile == "--help" {
 			fmt.Println("usage: assemble <path/config.json> <invitekey>")
 			return
 		}
 
-		// Read the custom config
-		clientconfig, err := ioutil.ReadFile(cfgfile)
-		if err != nil {
-			log.Fatal("Error reading config.json:", err)
-		}
-		cfg, err = config.LoadConfig(cfg, string(clientconfig))
-		if err != nil {
-			log.Fatal("Error parsing config.json:", err)
-		}
-
 		if len(os.Args) > 2 {
 			defaultinvite = os.Args[2]
 		}
+	}
+
+	// Read the custom config
+	clientconfig, err := ioutil.ReadFile(cfgfile)
+	if err != nil {
+		log.Println("Error reading config.json:", err)
+	}
+
+	cfg, err = config.LoadConfig(cfg, string(clientconfig))
+	if err != nil {
+		log.Fatal("Error parsing config.json:", err)
 	}
 
 	//grab/create enc key
@@ -89,7 +91,7 @@ func main() {
 	}
 
 	// Check if the cert files are available and make new ones if needed
-	err := httpscerts.Check("cert.pem", "key.pem")
+	err = httpscerts.Check("cert.pem", "key.pem")
 	if err != nil {
 		err = httpscerts.Generate("cert.pem", "key.pem", cfg.Host)
 		if err != nil {
@@ -98,7 +100,6 @@ func main() {
 	}
 
 	service.SocketServer.On("connection", socketHandlers)
-
 	service.SocketServer.On("error", func(so socketio.Socket, err error) {
 		log.Println("socket error:", err)
 	})
@@ -135,7 +136,7 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 				r.FormValue("avatar"),
 				r.FormValue("alertaddress"))
 
-			service.Users[token.Path("uid").Data().(string)] = token
+			service.Users[token.Path("uid").Data().(string)].Token = token
 
 			competok := utils.Compress([]byte(token.String()))
 			etok, _ := utils.Encrypt(service.UserKey, competok.Bytes())
@@ -159,6 +160,32 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type soHandler func(string)
+type soHandlerJSON func(string, *gabs.Container)
+
+func jsonSocketWrapper(so socketio.Socket, checkUser bool, f soHandlerJSON) soHandler {
+	return soHandler(func(msg string) {
+		g, err := gabs.ParseJSON([]byte(msg))
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		uid := ""
+		ok := false
+		if checkUser {
+			uid, ok = service.ExtractAndCheckToken(so, g)
+			if !ok {
+				return
+			}
+			service.Users[uid].LastAct = time.Now()
+		}
+
+		f(uid, g)
+	})
+}
+
+//TODO Refactor socket handlers, move logic into assemble.Service
 func socketHandlers(so socketio.Socket) {
 	so.On("auth", func(msg string) {
 		uid, err := service.ValidateUserToken(nil, msg)
@@ -177,7 +204,7 @@ func socketHandlers(so socketio.Socket) {
 		service.SendOnlineUserList(so)
 
 		//add user to online status
-		ou := assemble.OnlineUser{&so, time.Now()}
+		ou := assemble.OnlineUser{So: &so, LastPing: time.Now()}
 		service.OnlineUsers[uid] = &ou
 		//since the user end sup joining lobby anyway, no need to broadcast any global online status alert
 
@@ -186,6 +213,8 @@ func socketHandlers(so socketio.Socket) {
 			for k, v := range service.OnlineUsers {
 				if v.So == &so {
 					delete(service.OnlineUsers, k)
+					service.Users[k].LastAlert = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+					service.Users[k].LastAct = time.Now()
 
 					rms := so.Rooms()
 					for i := 0; i < len(rms); i++ {
@@ -193,6 +222,7 @@ func socketHandlers(so socketio.Socket) {
 					}
 
 					so.BroadcastTo("lobby", "userdisconnect", `{"uid":"`+k+`"}`)
+					log.Println("disconnected", k)
 					break
 				}
 			}
@@ -201,14 +231,7 @@ func socketHandlers(so socketio.Socket) {
 		service.JoinRooms(so, uid)
 	})
 
-	so.On("inviteusertoroom", func(msg string) {
-		g, _ := gabs.ParseJSON([]byte(msg))
-
-		uid, ok := service.ExtractAndCheckToken(so, g)
-		if !ok {
-			return
-		}
-
+	so.On("inviteusertoroom", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
 		invuid := g.Path("uid").Data().(string)
 		_, uok := service.Users[invuid]
 		if uok {
@@ -247,60 +270,31 @@ func socketHandlers(so socketio.Socket) {
 		} else {
 			so.Emit("auth_error", "Invalid uid")
 		}
-	})
+	}))
 
-	so.On("userinfo", func(msg string) {
-		g, _ := gabs.ParseJSON([]byte(msg))
-
-		_, ok := service.ExtractAndCheckToken(so, g)
-		if !ok {
-			return
-		}
-
-		uid := g.Path("uid").Data().(string)
+	so.On("userinfo", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
+		uid = g.Path("uid").Data().(string)
 		u, uok := service.Users[uid]
 		if uok {
-			so.Emit("userinfo", assemble.PublicUserString(u))
+			so.Emit("userinfo", assemble.PublicUserString(u.Token))
 		} else {
 			so.Emit("auth_error", "Invalid uid")
 		}
-	})
+	}))
 
-	so.On("onlineusers", func(msg string) {
-		g, _ := gabs.ParseJSON([]byte(msg))
-
-		_, ok := service.ExtractAndCheckToken(so, g)
-		if !ok {
-			return
-		}
-
+	so.On("onlineusers", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
 		service.SendOnlineUserList(so)
-	})
+	}))
 
-	so.On("ping", func(msg string) {
-		g, _ := gabs.ParseJSON([]byte(msg))
-
-		uid, ok := service.ExtractAndCheckToken(so, g)
-		if !ok {
-			return
-		}
-
+	so.On("ping", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
 		//TODO optimize for network performance
 		_, ok2 := service.OnlineUsers[uid]
 		if ok2 {
-			service.OnlineUsers[uid].LastAct = time.Now()
+			service.OnlineUsers[uid].LastPing = time.Now()
 		}
-	})
+	}))
 
-	so.On("invitenewuser", func(msg string) {
-		//log.Println(msg)
-		g, _ := gabs.ParseJSON([]byte(msg))
-
-		uid, ok := service.ExtractAndCheckToken(so, g)
-		if !ok {
-			return
-		}
-
+	so.On("invitenewuser", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
 		em := g.Path("email").Data().(string)
 		fmt.Println(uid, "invited", em)
 
@@ -309,27 +303,13 @@ func socketHandlers(so socketio.Socket) {
 		service.Invites[id] = em
 
 		so.Emit("invitenewuser", "{\"key\": \""+id+"\"}")
-	})
+	}))
 
-	so.On("roomlist", func(msg string) {
-		g, _ := gabs.ParseJSON([]byte(msg))
-
-		_, ok := service.ExtractAndCheckToken(so, g)
-		if !ok {
-			return
-		}
-
+	so.On("roomlist", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
 		so.Emit("roomlist", service.CreateRoomList())
-	})
+	}))
 
-	so.On("ban", func(msg string) {
-		g, _ := gabs.ParseJSON([]byte(msg))
-
-		_, ok := service.ExtractAndCheckToken(so, g)
-		if !ok {
-			return
-		}
-
+	so.On("ban", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
 		//TODO save/load bans to disk
 		pass := g.Path("pass").Data().(string)
 		banid := g.Path("uid").Data().(string)
@@ -340,16 +320,9 @@ func socketHandlers(so socketio.Socket) {
 		} else {
 			so.Emit("auth_error", "Bad admin password")
 		}
-	})
+	}))
 
-	so.On("unban", func(msg string) {
-		g, _ := gabs.ParseJSON([]byte(msg))
-
-		_, ok := service.ExtractAndCheckToken(so, g)
-		if !ok {
-			return
-		}
-
+	so.On("unban", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
 		//TODO save/load bans to disk
 		pass := g.Path("pass").Data().(string)
 		banid := g.Path("uid").Data().(string)
@@ -361,16 +334,9 @@ func socketHandlers(so socketio.Socket) {
 			so.Emit("auth_error", "Bad admin password")
 			return
 		}
-	})
+	}))
 
-	so.On("directmessage", func(msg string) {
-		g, _ := gabs.ParseJSON([]byte(msg))
-
-		uid, ok := service.ExtractAndCheckToken(so, g)
-		if !ok {
-			return
-		}
-
+	so.On("directmessage", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
 		muid := g.Path("uid").Data().(string)
 
 		//check users
@@ -388,10 +354,10 @@ func socketHandlers(so socketio.Socket) {
 		//create private room, auto-invite & join the two participants
 		roomid := uid + ":" + muid
 		roomid2 := muid + ":" + uid
-		_, ok = service.Rooms[roomid]
+		_, ok := service.Rooms[roomid]
 		_, ok2 := service.Rooms[roomid2]
 		if !ok && !ok2 {
-			service.CreateRoom(service.Users[uid].Path("nick").Data().(string)+" / "+service.Users[muid].Path("nick").Data().(string), roomid, true, uid, service.DefMaxExp, service.DefMinExp, "", 100)
+			service.CreateRoom(service.Users[uid].Token.Path("nick").Data().(string)+" / "+service.Users[muid].Token.Path("nick").Data().(string), roomid, true, uid, service.DefMaxExp, service.DefMinExp, "", 100)
 		} else if !ok && ok2 {
 			roomid = roomid2
 		}
@@ -399,16 +365,9 @@ func socketHandlers(so socketio.Socket) {
 		//ok got the room, send join to uids
 		service.AddToRoom(so, uid, roomid)
 		service.AddToRoom(*mu.So, muid, roomid)
-	})
+	}))
 
-	so.On("createroom", func(msg string) {
-		g, _ := gabs.ParseJSON([]byte(msg))
-
-		uid, ok := service.ExtractAndCheckToken(so, g)
-		if !ok {
-			return
-		}
-
+	so.On("createroom", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
 		name := g.Path("roomname").Data().(string)
 		isprivate := g.Path("isprivate").Data().(bool)
 		minexptime := g.Path("minexptime").Data().(string)
@@ -438,29 +397,16 @@ func socketHandlers(so socketio.Socket) {
 
 		service.CreateRoom(name, roomid, isprivate, uid, maxdur, mindur, "", 100)
 		service.AddToRoom(so, uid, roomid)
-	})
+	}))
 
-	so.On("leave", func(msg string) {
-		g, _ := gabs.ParseJSON([]byte(msg))
-
-		uid, ok := service.ExtractAndCheckToken(so, g)
-		if !ok {
-			return
-		}
-
+	so.On("leave", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
 		//TODO handle "leaving" a direct message room
 		so.Emit("leave", g.Path("room").Data().(string))
 		so.Leave(g.Path("room").Data().(string))
 		service.BroadcastUserLeave(g.Path("room").Data().(string), uid, so)
-	})
+	}))
 
-	so.On("join", func(msg string) {
-		g, _ := gabs.ParseJSON([]byte(msg))
-
-		uid, ok := service.ExtractAndCheckToken(so, g)
-		if !ok {
-			return
-		}
+	so.On("join", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
 
 		room := ""
 		if g.Path("roomid").Data() != nil {
@@ -492,16 +438,9 @@ func socketHandlers(so socketio.Socket) {
 		} else {
 			so.Emit("auth_error", "You can't join this room")
 		}
-	})
+	}))
 
-	so.On("deletechatm", func(msg string) {
-		g, _ := gabs.ParseJSON([]byte(msg))
-
-		uid, ok := service.ExtractAndCheckToken(so, g)
-		if !ok {
-			return
-		}
-
+	so.On("deletechatm", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
 		room := g.Path("room").Data().(string)
 		msgid := g.Path("msgid").Data().(string)
 
@@ -518,30 +457,20 @@ func socketHandlers(so socketio.Socket) {
 				return
 			}
 		}
-	})
+	}))
 
-	so.On("chatm", func(msg string) {
-		//log.Println(msg)
-		g, _ := gabs.ParseJSON([]byte(msg))
-
-		uid, ok := service.ExtractAndCheckToken(so, g)
-		if !ok {
-			so.Emit("auth_error", "Invalid Room")
-			return
-		}
-
+	so.On("chatm", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
 		//TODO message size limit enforcement
-
 		g.SetP("", "t")    //clear full token
 		g.SetP(uid, "uid") //set uid and user info
 		g.SetP(time.Now().Unix(), "time")
-		g.SetP(service.Users[uid].Path("nick").Data().(string), "nick")
+		g.SetP(service.Users[uid].Token.Path("nick").Data().(string), "nick")
 		g.SetP(uuid.NewV4().String(), "msgid")
-		g.SetP(service.Users[uid].Path("avatar").Data().(string), "avatar")
+		g.SetP(service.Users[uid].Token.Path("avatar").Data().(string), "avatar")
 
 		//validate if user is in this room
 		if g.Path("room").Data() == nil {
-			so.Emit("auth_error", "Invalid Room: "+msg)
+			so.Emit("auth_error", "Invalid Room: "+g.String())
 			return
 		}
 		roomtmp := g.Path("room").Data().(string)
@@ -577,5 +506,5 @@ func socketHandlers(so socketio.Socket) {
 		service.Rooms[room].Messages = append(service.Rooms[room].Messages, g)
 		so.Emit("chatm", g.String())
 		so.BroadcastTo(room, "chatm", g.String())
-	})
+	}))
 }

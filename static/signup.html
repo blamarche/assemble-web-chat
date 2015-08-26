@@ -49,7 +49,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
           </div>
           <div class="form-group"><input class="form-control" name="alertaddress" autocomplete="off" placeholder="Alert Email Address (optional)"/>
               <span class="help-block">
-                  To get text message alerts, enter your phone providers gateway email. See more at <a href="#">Provider List</a>
+                  To get text message alerts, enter your phone providers gateway email. See more at <a href="#" data-toggle="modal" data-target="#smsgateways">Provider List</a>
               </span>
           </div>
 
@@ -67,6 +67,35 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
           </div>
           <div class="col-md-4"></div>
       </div>
+
+      <div id="smsgateways" class="modal fade">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <h4 class="modal-title">SMS Gateways</h4>
+            </div>
+            <div class="modal-body">
+                <table class="table"><tr><th>US Provider</th><th>SMS Address Format</th></tr>
+                    <tr><td>AllTel</td><td>xxxyyyzzzz@text.wireless.alltel.com</td></tr>
+                    <tr><td>AT&amp;T</td><td>xxxyyyzzzz@txt.att.net</td></tr>
+                    <tr><td>Boost Mobile</td><td>xxxyyyzzzz@myboostmobile.com</td></tr>
+                    <tr><td>Cricket</td><td>xxxyyyzzzz@sms.mycricket.com</td></tr>
+                    <tr><td>Sprint</td><td>xxxyyyzzzz@messaging.sprintpcs.com</td></tr>
+                    <tr><td>T-Mobile</td><td>xxxyyyzzzz@tmomail.net</td></tr>
+                    <tr><td>US Cellular</td><td>xxxyyyzzzz@email.uscc.net</td></tr>
+                    <tr><td>Verizon</td><td>xxxyyyzzzz@vtext.com</td></tr>
+                    <tr><td>Virgin Mobile</td><td>xxxyyyzzzz@vmobl.com</td></tr>
+                </table>
+                <label>For Example</label> <br>If your number is (444)555-6666 with Verizon, your address would be 4445556666@vtext.com
+                <br><a href="https://duckduckgo.com/?q=list+of+sms+gateways" target="_blank">Click here to find more gateways</a>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            </div>
+          </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+      </div><!-- /.modal -->
 
   </body>
 </html>

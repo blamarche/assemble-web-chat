@@ -66,6 +66,8 @@ $(document).ready(function(){
         isprivate=$("#createroom .isprivate:checked").length;
         maxexptime=$("#createroom .maxexptime").val();
         minexptime=$("#createroom .minexptime").val();
+
+        switchOnJoin=true;
         socket.emit("createroom", JSON.stringify({"t": token, "roomname": name, "maxexptime": maxexptime, "minexptime": minexptime, "isprivate": (isprivate!=0)}));
 
         $("#createroom .roomname").val("");
@@ -73,6 +75,7 @@ $(document).ready(function(){
 
     $("#sendmessage").on('click', function(e) {
         var uid = $(e.currentTarget).attr("data-uid");
+        switchOnJoin=true;
         socket.emit("directmessage",JSON.stringify({"t":token, "uid": uid}));
     });
 
@@ -82,6 +85,8 @@ $(document).ready(function(){
         if (typeof rooms[rm]!="undefined") {
             switchRoom(rm);
             updateSidebar();
+        } else {
+            switchOnJoin=true;
         }
         return false;
     });
@@ -123,6 +128,7 @@ var roomnames = {};
 var cur_room = "";
 var cur_dur = "48h";
 var token = window.location.hash.substring(1);
+var switchOnJoin = true;
 
 $(window).on('beforeunload', function(){
     socket.close();
@@ -183,6 +189,7 @@ socket.on('chatm', function(d){
     appendChatMessage(d.uid,d.room,d.name,d.nick,d.m,d.msgid,d.avatar,d.time);
     scrollToBottom();
     if ($("#m").prop('disabled')==true) {
+        $("#m").prop('disabled', false);
         $("#m").focus();
     }
     $("#m").prop('disabled', false);
@@ -286,8 +293,10 @@ socket.on('join', function(d){
         $('#messages').append($('<li>').text("Joined "+d.name+" ("+d.minexptime+" - "+d.maxexptime+")"));
         rooms[d.room] = {users: [], messages: [], friendlyname: d.name, mcount: 0, minexptime: d.minexptime, maxexptime: d.maxexptime};
         roomnames[d.name] = d.room;
-        if (d.room=="lobby")
+        if (d.room=="lobby" || switchOnJoin) {
             switchRoom(d.room);
+            switchOnJoin=false;
+        }
     }
     updateSidebar();
 });

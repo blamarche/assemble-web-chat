@@ -23,13 +23,12 @@ Assemble is a GPLv3, database-less, full featured html chat system meant to be q
 * Private chat rooms with invite
 * Show chat room default message expirations on-join
 * Direct Messaging
+* Text message / email notifications
 
 ## Features Yet To Be Implemented
 * Basic "emoticons"
-* (Optional) Text message / push notification process
 * User token 'sharing' to other user-owned devices once signed in
 * Moderation process (ie /kick for the creator)
-* assemble.go Code Refactor
 
 ## Other Features to Consider
 * Room avatars
