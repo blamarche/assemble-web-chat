@@ -17,6 +17,8 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
 // This is not meant to be clean from the get-go and I'm sure it'll need refactoring
 package main
 
+//TODO investigate first-refresh join of lobby, etc
+
 import (
 	"bytes"
 	"compress/zlib"
@@ -374,6 +376,48 @@ func socketHandlers(so socketio.Socket) {
 		}
 	})
 
+	so.On("directmessage", func(msg string) {
+		g, _ := gabs.ParseJSON([]byte(msg))
+
+		uid, ok := extractAndCheckToken(so, g)
+		if !ok {
+			return
+		}
+
+		muid := g.Path("uid").Data().(string)
+
+		//check users
+		mu, isonline := onlineusers[muid]
+		if !isonline {
+			so.Emit("auth_error", "User must be online to initiate direct messaging")
+			return
+		}
+		_, isonline2 := onlineusers[uid]
+		if !isonline2 {
+			log.Println("Offline user trying to send commands: " + uid)
+			return
+		}
+
+		//TODO config'ed out
+		dur24h, _ := time.ParseDuration("24h")
+		dur30s, _ := time.ParseDuration("30s")
+
+		//create private room, auto-invite & join the two participants
+		roomid := uid + ":" + muid
+		roomid2 := muid + ":" + uid
+		_, ok = rooms[roomid]
+		_, ok2 := rooms[roomid2]
+		if !ok && !ok2 {
+			rooms[roomid] = createRoom(users[uid].Path("nick").Data().(string)+" / "+users[muid].Path("nick").Data().(string), roomid, true, uid, dur24h, dur30s, "", 100)
+		} else if !ok && ok2 {
+			roomid = roomid2
+		}
+
+		//ok got the room, send join to uids
+		addToRoom(so, uid, roomid)
+		addToRoom(*mu.So, muid, roomid)
+	})
+
 	so.On("createroom", func(msg string) {
 		g, _ := gabs.ParseJSON([]byte(msg))
 
@@ -420,6 +464,8 @@ func socketHandlers(so socketio.Socket) {
 		if !ok {
 			return
 		}
+
+		//TODO handle "leaving" a direct message room
 		so.Emit("leave", g.Path("room").Data().(string))
 		so.Leave(g.Path("room").Data().(string))
 		broadcastUserLeave(g.Path("room").Data().(string), uid, so)
@@ -860,7 +906,8 @@ func signup(w http.ResponseWriter, r *http.Request) {
 				r.FormValue("phone"),
 				r.FormValue("url"),
 				r.FormValue("desc"),
-				r.FormValue("avatar"))
+				r.FormValue("avatar"),
+				r.FormValue("alertaddress"))
 
 			users[token.Path("uid").Data().(string)] = token
 
@@ -886,7 +933,7 @@ func signup(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func createNewUserToken(nick string, name string, email string, phone string, url string, desc string, avatar string) (*gabs.Container, error) {
+func createNewUserToken(nick string, name string, email string, phone string, url string, desc string, avatar string, alertaddress string) (*gabs.Container, error) {
 
 	uid := uuid.NewV4().String()
 	privid := uuid.NewV4().String()
@@ -906,6 +953,7 @@ func createNewUserToken(nick string, name string, email string, phone string, ur
 	token.SetP(url, "url")
 	token.SetP(desc, "desc")
 	token.SetP(avatar, "avatar")
+	token.SetP(alertaddress, "alertaddress")
 
 	return token, err
 }

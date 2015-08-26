@@ -71,6 +71,11 @@ $(document).ready(function(){
         $("#createroom .roomname").val("");
     });
 
+    $("#sendmessage").on('click', function(e) {
+        var uid = $(e.currentTarget).attr("data-uid");
+        socket.emit("directmessage",JSON.stringify({"t":token, "uid": uid}));
+    });
+
     $('#messages').on('click', 'a.joinroom', function(ev){
         var rm = $(ev.currentTarget).attr("data-room");
         socket.emit("join", JSON.stringify({"t": token, "roomid": rm}));
@@ -222,6 +227,7 @@ socket.on('userinfo', function(d) {
     $("#userprofile .url").text(d.url);
     $("#userprofile .desc").html(d.desc);
     $("#inviteusertoroom").attr("data-uid",d.uid);
+    $("#sendmessage").attr("data-uid",d.uid);
 
     $("#userprofile").modal();
 })
@@ -276,11 +282,12 @@ socket.on('join', function(d){
     if (d.maxexptime.indexOf("m0s")!=-1)
         d.maxexptime = d.maxexptime.replace("0s","");
 
-    $('#messages').append($('<li>').text("Joined "+d.name+" ("+d.minexptime+" - "+d.maxexptime+")"));
     if (!(d.name in roomnames)) {
+        $('#messages').append($('<li>').text("Joined "+d.name+" ("+d.minexptime+" - "+d.maxexptime+")"));
         rooms[d.room] = {users: [], messages: [], friendlyname: d.name, mcount: 0, minexptime: d.minexptime, maxexptime: d.maxexptime};
         roomnames[d.name] = d.room;
-        switchRoom(d.room);
+        if (d.room=="lobby")
+            switchRoom(d.room);
     }
     updateSidebar();
 });
