@@ -15,11 +15,71 @@ You should have received a copy of the GNU General Public License
 along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+var icon_lib = {
+    ">:|":"icon_angry.svg",
+    ">:(":"icon_angry.svg",
+    ":D":"icon_bigsmile.svg",
+    ":-D":"icon_bigsmile.svg",
+    ":$":"icon_blush.svg",
+    ":-$":"icon_blush.svg",
+    "o.O":"icon_confused.svg",
+    "O.o":"icon_confused.svg",
+    "O_o":"icon_confused.svg",
+    "o_O":"icon_confused.svg",
+    "8)":"icon_cool.svg",
+    "8-)":"icon_cool.svg",
+    ";(":"icon_cry.svg",
+    ":'(":"icon_cry.svg",
+    ";-(":"icon_cry.svg",
+    "(important)":"icon_important.svg",
+    ":*":"icon_kiss.svg",
+    "XD":"icon_lol.svg",
+    ":|":"icon_neutral.svg",
+    ":-|":"icon_neutral.svg",
+    ":(":"icon_sad.svg",
+    ":-|":"icon_neutral.svg",
+    ":-(":"icon_sad.svg",
+    ":-#":"icon_sick.svg",
+    ":)":"icon_smile.svg",
+    ":-)":"icon_smile.svg",
+    ":O":"icon_surprised.svg",
+    ":-O":"icon_surprised.svg",
+    "(thinking)":"icon_think.svg",
+    ":P":"icon_tongue.svg",
+    ":-P":"icon_tongue.svg",
+    "(twisted)":"icon_twisted.svg",
+    ";)":"icon_wink.svg",
+    ";-)":"icon_wink.svg",
+
+    "(angry)":"icon_angry.svg",
+    "(bigsmile)":"icon_bigsmile.svg",
+    "(blush)":"icon_blush.svg",
+    "(confused)":"icon_confused.svg",
+    "(shades)":"icon_cool.svg",
+    "(cry)":"icon_cry.svg",
+    "(kiss)":"icon_kiss.svg",
+    "(lol)":"icon_lol.svg",
+    "(neutral)":"icon_neutral.svg",
+    "(sad)":"icon_sad.svg",
+    "(sick)":"icon_sick.svg",
+    "(smile)":"icon_smile.svg",
+    "(surprised)":"icon_surprised.svg",
+    "(tongue)":"icon_tongue.svg",
+    "(wink)":"icon_wink.svg",
+}
 
 $(document).ready(function(){
     $( window ).resize(function() {
         updateSidebar();
     });
+
+    for (var x in icon_lib) { //its okk that these double. it'll only load once anyway
+        var ic=$("<img>").attr("src","/icons/"+icon_lib[x]).attr("title", x);
+        $("#iconPreload").append(ic);
+        if (x.indexOf("(")==0) {
+            $("#iconselect .modal-body").append(ic);
+        }
+    }
 
     var myDropZone = new Dropzone("#imgupFile",{
     //$("#imgupFile").dropzone({
@@ -88,6 +148,21 @@ $(document).ready(function(){
         } else {
             switchOnJoin=true;
         }
+        return false;
+    });
+
+    $("#iconselect").on('click', '.modal-body img', function(ev){
+        var ic=$(ev.currentTarget).attr("title");
+        $("#iconselect").modal('hide');
+        if ($("#m").val()=="") {
+            $("#m").val(ic);
+            $("form").submit();
+        } else {
+            $("#m").val($("#m").val()+" "+ic);
+        }
+
+        $("#m").focus();
+        ev.preventDefault();
         return false;
     });
 
@@ -321,7 +396,7 @@ socket.on('auth', function(d){
 
 socket.on('invitenewuser', function(d){
     var d=JSON.parse(d);
-    $('#messages').append($('<li>').text("Invite Key: "+d.key));
+    $('#messages').append($('<li>').html("Invite Key: "+d.key+" <a href='/signup/#"+d.key+"'>(signup link)</a>"));
 });
 
 socket.on('deletechatm', function(d){
@@ -401,6 +476,9 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
                 return;
             }
         });
+
+        //icons
+        m = processIcons(m);
     }
 
     if (avatar=="" || typeof avatar=="undefined") {
@@ -436,6 +514,17 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
         })
         */
     );
+}
+
+function processIcons(m) {
+    for (var x in icon_lib) {
+        if (m==x){
+            m='<img src="/icons/'+icon_lib[x]+'" class="smiley large" />';
+        }
+        m=m.split(x).join('<img src="/icons/'+icon_lib[x]+'" class="smiley" />');
+        //needs to be smarter about where it does replacements?
+    }
+    return m;
 }
 
 function requestDeleteMessage(msgid) {

@@ -61,6 +61,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
               <button id="imgup" class="btn btn-primary"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></button>
               <input type="" id="imgupFile" class="hidden"></input>
           </span>
+          <span id="iconbtn" class="btn btn-info" data-target="#iconselect" data-toggle="modal"><span class="glyphicon" aria-hidden="true"><img src="/icons/icon_smile.svg"/></span></span>
         </form>
 
     </div>
@@ -162,13 +163,29 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
               </div>
               <div class="modal-footer">
                   <button id="sendmessage" type="button" class="btn btn-info" data-dismiss="modal">Send Message</button>
-                  <button id="inviteusertoroom" type="button" class="btn btn-success" data-dismiss="modal">Invite To Room</button>                  
+                  <button id="inviteusertoroom" type="button" class="btn btn-success" data-dismiss="modal">Invite To Room</button>
                   <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
               </div>
             </div><!-- /.modal-content -->
           </div><!-- /.modal-dialog -->
         </div><!-- /.modal -->
+
+        <div id="iconselect" class="modal">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Smileys</h4>
+              </div>
+              <div class="modal-body">
+
+              </div>
+            </div><!-- /.modal-content -->
+          </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
     </div>
+
+    <div id="iconPreload" class="hidden"></div>
 
     <script src="/index.js"></script>
   </body>

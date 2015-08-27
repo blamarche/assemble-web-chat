@@ -23,6 +23,19 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
     <link href="/signup-login.css" rel="stylesheet">
     <script src="/jquery-1.11.1.js"></script>
     <script src="/bootstrap/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var key = window.location.hash;
+            if (key!="") {
+                $("#invite").val(key.substring(1));
+            }
+        });
+    </script>
+    <style>
+        .modal-body {
+            overflow-x:scroll;
+        }
+    </style>
   </head>
 
   <body>
@@ -33,7 +46,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
       <div class="col-md-4">
       <h3>Assemble Signup</h3>
       <form action="/signup/" name="signup" method="POST">
-          <div class="form-group"><input class="form-control" name="invite" autocomplete="off" placeholder="Invite ID" />
+          <div class="form-group"><input id="invite" class="form-control" name="invite" autocomplete="off" placeholder="Invite ID" />
               <span class="help-block">( ie: a1b2c3d4-e5f6-a1b2-c3d4-e5f6a1b2c3d4 )</span>
           </div>
           <div class="form-group"><input class="form-control" name="nick" autocomplete="off" placeholder="Nickname"/></div>
@@ -47,7 +60,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
                   <a href="http://dataurl.net/#dataurlmaker" target="_blank">Avatar generator. Keep it small! 64x64px</a>
               </span>
           </div>
-          <div class="form-group"><input class="form-control" name="alertaddress" autocomplete="off" placeholder="Alert Email Address (optional)"/>
+          <div class="form-group"><input class="form-control" name="alertaddress" autocomplete="off" placeholder="Alert Email/Text Address (optional)"/>
               <span class="help-block">
                   To get text message alerts, enter your phone providers gateway email. See more at <a href="#" data-toggle="modal" data-target="#smsgateways">Provider List</a>
               </span>
