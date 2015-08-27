@@ -136,6 +136,9 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 				r.FormValue("avatar"),
 				r.FormValue("alertaddress"))
 
+			service.Users[token.Path("uid").Data().(string)] = &assemble.User{}
+			service.Users[token.Path("uid").Data().(string)].LastAlert = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+			service.Users[token.Path("uid").Data().(string)].LastAct = time.Now()
 			service.Users[token.Path("uid").Data().(string)].Token = token
 
 			competok := utils.Compress([]byte(token.String()))

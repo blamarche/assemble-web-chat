@@ -27,6 +27,7 @@ Assemble is a GPLv3, database-less, full featured html chat system meant to be q
 * Basic smilies
 
 ## Features Yet To Be Implemented
+* Harden against crashes and validation
 * Avatar generator
 * Client-side addition of custom "emoticons/stickers"
 * User token 'sharing' to other user-owned devices once signed in
