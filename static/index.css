@@ -1,11 +1,15 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font: 13px Helvetica, Arial; width: 100%; height: 100%;}
+
+.row { margin-left:0; margin-right:0; }
 form.msg { background: #000; padding: 3px; position: fixed; bottom: 0; left: 0; width: 100%; }
-form.msg input { border: 0; padding: 10px; width: 77%; }
-form.msg .btn { padding: 3px; height:36px !important; width:auto; overflow:hidden; }
+form.msg div { padding-left: 1px; padding-right: 1px; }
+form.msg input { border: 0; padding: 10px; width: 100%; }
+form.msg .btn { padding: 3px; height:36px !important; width:100%; overflow:hidden; }
 form.msg .glyphicon { margin-left: -2px; }
-form.msg .glyphicon img { width: 13px; margin-top: -4px; }
-#imgup { padding: 3px; height:36px !important; width:auto; overflow:hidden; }
+form.msg .glyphicon img { width: 20px; margin-top: -4px; }
+#imgup { padding: 3px; height:36px !important; width:100%; overflow:hidden; }
+
 #messages { list-style-type: none; margin: 0; padding: 0; margin-bottom: 50px; padding-left: 150px;}
 #messages li { padding: 5px 10px; clear:both; line-height: 18px;}
 #messages li:nth-child(odd) { background: #eee; }
@@ -78,6 +82,7 @@ form.msg .glyphicon img { width: 13px; margin-top: -4px; }
     width: 48px;
     height: 48px;
     margin-right: 8px;
+    cursor: pointer;
 }
 
 #sidebar {

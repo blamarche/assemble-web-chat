@@ -55,14 +55,28 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
         </div>
 
         <form action="" class="msg">
-          <input id="m" autocomplete="off" />
-          <button id="sendbtn" class="btn btn-success"><span class="glyphicon glyphicon-send" aria-hidden="true"></span></button>
-          <span id="uploadContainer">
-              <button id="imgup" class="btn btn-primary"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></button>
-              <input type="" id="imgupFile" class="hidden"></input>
-          </span>
-          <span id="iconbtn" class="btn btn-info" data-target="#iconselect" data-toggle="modal"><span class="glyphicon" aria-hidden="true"><img src="/icons/icon_smile.svg"/></span></span>
+          <div class="row">
+              <div class="col-xs-9">
+              <input id="m" autocomplete="off" />
+              </div>
+
+              <div class="col-xs-1">
+              <button id="sendbtn" class="btn btn-success"><span class="glyphicon glyphicon-send" aria-hidden="true"></span></button>
+              </div>
+
+              <div class="col-xs-1">
+              <span id="uploadContainer">
+                  <button id="imgup" class="btn btn-primary"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></button>
+                  <input type="" id="imgupFile" class="hidden"></input>
+              </span>
+              </div>
+
+              <div class="col-xs-1">
+              <span id="iconbtn" class="btn btn-info" data-target="#iconselect" data-toggle="modal"><span class="glyphicon" aria-hidden="true"><img src="/icons/icon_smile.svg"/></span></span>
+              </div>
+          </div>
         </form>
+
 
     </div>
 

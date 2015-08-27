@@ -27,7 +27,10 @@ Assemble is a GPLv3, database-less, full featured html chat system meant to be q
 * Basic smilies
 
 ## Features Yet To Be Implemented
-* Harden against crashes and validation
+* Validation / error proofing
+* Update page title when new messages and not focused
+* Client side options for notification disable, sound effects etc.
+* Sfx on-message and unfocused
 * Avatar generator
 * Client-side addition of custom "emoticons/stickers"
 * User token 'sharing' to other user-owned devices once signed in
@@ -37,4 +40,4 @@ Assemble is a GPLv3, database-less, full featured html chat system meant to be q
 * (Optional) Inter-server communication system
 
 ### Special Thanks
-Thanks goes to Sebastian Kraft for providing public domain smileys: http://opengameart.org/content/cubikopp-qubic-smilies
+Thanks goes to Sebastian Kraft for providing public domain smilies: http://opengameart.org/content/cubikopp-qubic-smilies
