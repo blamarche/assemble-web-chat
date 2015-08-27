@@ -26,6 +26,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -168,6 +169,15 @@ type soHandlerJSON func(string, *gabs.Container)
 
 func jsonSocketWrapper(so socketio.Socket, checkUser bool, f soHandlerJSON) soHandler {
 	return soHandler(func(msg string) {
+		defer func() {
+			if err := recover(); err != nil {
+				const size = 64 << 10
+				buf := make([]byte, size)
+				buf = buf[:runtime.Stack(buf, false)]
+				log.Printf("socket error %v: %s", err, buf)
+			}
+		}()
+
 		g, err := gabs.ParseJSON([]byte(msg))
 		if err != nil {
 			log.Println(err)
