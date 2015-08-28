@@ -29,7 +29,7 @@ type OnlineUser struct {
 	LastPing time.Time
 }
 
-// AlertState holds info about the last alert that was sent to an offline user
+// User holds info about a user who has used this server
 type User struct {
 	LastAlert time.Time
 	LastAct   time.Time

@@ -17,7 +17,6 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 //This is not meant to be clean from the get-go and it will need refactoring
-//TODO investigate first-refresh join of rooms not loading in
 
 import (
 	"encoding/base64"
@@ -315,7 +314,6 @@ func socketHandlers(so socketio.Socket) {
 		em := g.Path("email").Data().(string)
 		fmt.Println(uid, "invited", html.EscapeString(em))
 
-		//TODO email invite
 		id := uuid.NewV4().String()
 		service.Invites[id] = em
 
@@ -417,11 +415,14 @@ func socketHandlers(so socketio.Socket) {
 	}))
 
 	so.On("leave", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
-		//TODO handle "leaving" a direct message room
-		//TODO remove from members list, unless its lobby
-		so.Emit("leave", g.Path("room").Data().(string))
-		so.Leave(g.Path("room").Data().(string))
-		service.BroadcastUserLeave(g.Path("room").Data().(string), uid, so)
+		//remove from members list, unless its lobby
+		room := g.Path("room").Data().(string)
+		if room != "lobby" {
+			delete(service.Rooms[room].MemberUIDs, uid)
+		}
+		so.Emit("leave", room)
+		so.Leave(room)
+		service.BroadcastUserLeave(room, uid, so)
 	}))
 
 	so.On("history", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {

@@ -60,6 +60,24 @@ $(document).ready(function(){
         updateSidebar();
     });
 
+    $ ( window ).on('keydown', function(ev) {
+        if (ev.keyCode == 40 && ev.ctrlKey) { //down
+            var troom = $("#sidebar li[data-room='"+cur_room+"']").next().attr("data-room");
+            if (typeof troom!="undefined") {
+                switchRoom(troom);
+            }
+            ev.preventDefault();
+            return false;
+        } else if (ev.keyCode == 38 && ev.ctrlKey) { //up
+            var troom = $("#sidebar li[data-room='"+cur_room+"']").prev().attr("data-room");
+            if (typeof troom!="undefined") {
+                switchRoom(troom);
+            }
+            ev.preventDefault();
+            return false;
+        }
+    });
+
     for (var x in icon_lib) { //its okk that these double. it'll only load once anyway
         var ic=$("<img>").attr("src","/icons/"+icon_lib[x]).attr("title", x);
         $("#iconPreload").append(ic);
@@ -118,6 +136,11 @@ $(document).ready(function(){
     $("#inviteusertoroom").on('click', function(e) {
         var uid = $(e.currentTarget).attr("data-uid");
         socket.emit("inviteusertoroom", JSON.stringify({"t": token, "uid": uid, "room": cur_room}));
+    });
+
+    $("#btndeletemessage").on('click', function(e) {
+        var msgid = $("#btndeletemessage").attr("data-msgid");
+        requestDeleteMessage(msgid);
     });
 
     $("#createnewroom").on('click', function(e) {
@@ -215,38 +238,25 @@ $("#m").on('keydown', function(ev) {
 });
 
 //menu buttons.
-//TODO switch to bootstrap dialogs, not 'prompt'
 $("#btnroomlist").on('click', function() {
     socket.emit("roomlist",JSON.stringify({"t": token}));
 });
 $("#btncreateroom").on('click', function() {
-    //var roomname = prompt("Enter the room name: ");
-    //socket.emit("createroom", JSON.stringify({"t": token, "roomname": roomname, "private":false}));
     $("#createroom").modal();
 });
 $("#btnduration").on('click', function() {
     $("#messageduration").modal();
-    /*
-    var m = prompt('Enter the desired default expiration time for your messages (30s, 1m, 10m, 24h, etc): ');
-    if (m!=null) {
-        var unit = m.substring(m.length-1);
-        if (unit!="s"&&unit!="m"&&unit!="h") {
-            alert("Invalid value.");
-        } else {
-            cur_dur = m;
-        }
-    }
-    */
 });
 $("#btninvitenewuser").on('click', function() {
-    socket.emit("invitenewuser", JSON.stringify({"t": token, "email": prompt("Enter a message for the invited user (optional):")}));
+    var emm=prompt("Enter a message for the invited user (optional):");
+    if (typeof emm!="undefined")
+        socket.emit("invitenewuser", JSON.stringify({"t": token, "email": emm}));
 });
 $("#btnuserlist").on('click', function() {
     socket.emit("onlineusers",JSON.stringify({"t": token}));
 });
 
 socket.on('chatm', function(d){
-    //console.log(d);
     d=JSON.parse(d);
     appendChatMessage(d.uid,d.room,d.name,d.nick,d.m,d.msgid,d.avatar,d.time);
     scrollToBottom();
@@ -257,8 +267,12 @@ socket.on('chatm', function(d){
     $("#m").prop('disabled', false);
 
     try {
-        if (Notification.permission==="granted" && (cur_room!=d.room || !document.hasFocus()) && d.m.indexOf("data:image/")!=0)
-            var notification = new Notification("["+d.name+"] "+d.nick+": "+d.m.substring(0,256)+" (Assemble Chat)");
+        if (Notification.permission==="granted" && (cur_room!=d.room || !document.hasFocus()) && d.m.indexOf("data:image/")!=0) {
+            var notification = new Notification(d.nick+": "+($("<div/>").html(d.m).text().substring(0,256))+" ["+d.name+"]");
+            setTimeout(function() {
+                notification.close();
+            },7000);
+        }
     }catch (err) {
         console.log(err);
     }
@@ -280,7 +294,6 @@ socket.on('inviteusertoroom', function(d) {
     var m = "<span class='prefix'>You've been invited to join </span>";
     m+="<a class='joinroom' data-room='"+d.room+"'>"+d.name+"</a>";
     m+="<div class='clearfloat'></div>";
-    //$('#messages').append($('<li>').html(m));
     appendSystemMessage(m, 0);
     scrollToBottom();
 });
@@ -352,15 +365,15 @@ socket.on('join', function(d){
         d.maxexptime = d.maxexptime.replace("0s","");
 
     if (!(d.name in roomnames)) {
-        appendSystemMessage("Joined "+d.name+" ("+d.minexptime+" - "+d.maxexptime+")", 3000);
         rooms[d.room] = {users: [], messages: [], friendlyname: d.name, mcount: 0, minexptime: d.minexptime, maxexptime: d.maxexptime};
         roomnames[d.name] = d.room;
         if (d.room=="lobby" || switchOnJoin) {
             switchRoom(d.room);
             switchOnJoin=false;
         }
-        //request history
-        socket.emit("history",JSON.stringify({"t": token, "room": d.room}));
+        var t = (new Date()).getTime()/1000;
+        appendChatMessage("", d.room, d.name, "<em>SYSTEM</em>", "Joined "+d.name+" ("+d.minexptime+" - "+d.maxexptime+")", "", "/icons/icon_important.svg", t);
+        socket.emit("history",JSON.stringify({"t": token, "room": d.room}));   //request history
     }
     updateSidebar();
 });
@@ -505,15 +518,16 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
     }
 
     $('#messages').append($('<li>')
-        .html("<div class='useravatar'>"+avatarimg+"</div><div class='messagecontainer'><a data-uid='"+uid+"' class='userprofilelink nick'>"+nick+"</a> <span class='time' data-time='"+rawtime+"'>"+time+"</span> <br><span class='messagetext'>"+m+"</span>")
+        .html("<div class='useravatar'>"+avatarimg+"</div><div class='messagecontainer'><a title='"+uid+"' data-uid='"+uid+"' class='userprofilelink nick'>"+nick+"</a> <span class='time' data-time='"+rawtime+"'>"+time+"</span> <br><span class='messagetext'>"+m+"</span>")
         .attr("data-msgid", id)
         .attr("data-room", room)
-        .attr("title",id)
+        //.attr("title",id)
         .addClass("chatmsg")
         .addClass(hide)
         .on("contextmenu",function(ev) {
             var msgid = $(ev.currentTarget).attr("data-msgid")
-            requestDeleteMessage(msgid);
+            $("#btndeletemessage").attr("data-msgid", msgid);
+            $("#deletemessagemodal").modal();
             return false;
         })
         /*
