@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
+	"html"
 	"log"
 	"net"
 	"net/http"
@@ -380,8 +381,6 @@ func (svc *Service) JoinRoom(so socketio.Socket, uid string, room string) {
 	bc.SetP(k, "room")
 	bc.SetP(v.FriendlyName, "name")
 	so.BroadcastTo(k, "joined", bc.String())
-
-	svc.SendRoomHistory(so, uid, room)
 }
 
 func (svc *Service) SendRoomHistory(so socketio.Socket, uid string, room string) {
@@ -468,6 +467,7 @@ func (svc *Service) ValidateUserToken(so socketio.Socket, msg string) (string, e
 		svc.Users[uid].LastAlert = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 		svc.Users[uid].LastAct = time.Now()
 		svc.Users[uid].Token = token
+		cleanToken(svc.Users[uid].Token)
 		if so != nil {
 			svc.AddToRoom(so, uid, "lobby")
 		} else {
@@ -480,6 +480,17 @@ func (svc *Service) ValidateUserToken(so socketio.Socket, msg string) (string, e
 	}
 
 	return uid, nil
+}
+
+func cleanToken(token *gabs.Container) {
+	token.SetP(html.EscapeString(token.Path("nick").Data().(string)), "nick")
+	token.SetP(html.EscapeString(token.Path("uid").Data().(string)), "uid")
+	token.SetP(html.EscapeString(token.Path("name").Data().(string)), "name")
+	token.SetP(html.EscapeString(token.Path("email").Data().(string)), "email")
+	token.SetP(html.EscapeString(token.Path("phone").Data().(string)), "phone")
+	token.SetP(html.EscapeString(token.Path("url").Data().(string)), "url")
+	token.SetP(html.EscapeString(token.Path("desc").Data().(string)), "desc")
+	token.SetP(html.EscapeString(token.Path("avatar").Data().(string)), "avatar")
 }
 
 func CreateNewUserToken(nick string, name string, email string, phone string, url string, desc string, avatar string, alertaddress string) (*gabs.Container, error) {

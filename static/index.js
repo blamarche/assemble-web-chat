@@ -15,58 +15,45 @@ You should have received a copy of the GNU General Public License
 along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var icon_lib = {
-    ">:|":"icon_angry.svg",
-    ">:(":"icon_angry.svg",
-    ":D":"icon_bigsmile.svg",
-    ":-D":"icon_bigsmile.svg",
-    ":$":"icon_blush.svg",
-    ":-$":"icon_blush.svg",
-    "o.O":"icon_confused.svg",
-    "O.o":"icon_confused.svg",
-    "O_o":"icon_confused.svg",
-    "o_O":"icon_confused.svg",
-    "8)":"icon_cool.svg",
-    "8-)":"icon_cool.svg",
-    ";(":"icon_cry.svg",
-    ":'(":"icon_cry.svg",
-    ";-(":"icon_cry.svg",
-    "(important)":"icon_important.svg",
-    ":*":"icon_kiss.svg",
-    "XD":"icon_lol.svg",
-    ":|":"icon_neutral.svg",
-    ":-|":"icon_neutral.svg",
-    ":(":"icon_sad.svg",
-    ":-|":"icon_neutral.svg",
-    ":-(":"icon_sad.svg",
-    ":-#":"icon_sick.svg",
-    ":)":"icon_smile.svg",
-    ":-)":"icon_smile.svg",
-    ":O":"icon_surprised.svg",
-    ":-O":"icon_surprised.svg",
-    "(thinking)":"icon_think.svg",
-    ":P":"icon_tongue.svg",
-    ":-P":"icon_tongue.svg",
-    "(twisted)":"icon_twisted.svg",
-    ";)":"icon_wink.svg",
-    ";-)":"icon_wink.svg",
+var socket = io("", {reconnectionDelayMax:1000, reconnectionDelay:500, timeout: 10000000, multiplex:false});
+var rooms = {};
+var roomnames = {};
+var cur_room = "";
+var cur_dur = "48h";
+var token = window.location.hash.substring(1);
+var switchOnJoin = true;
 
-    "(angry)":"icon_angry.svg",
-    "(bigsmile)":"icon_bigsmile.svg",
-    "(blush)":"icon_blush.svg",
-    "(confused)":"icon_confused.svg",
-    "(shades)":"icon_cool.svg",
-    "(cry)":"icon_cry.svg",
-    "(kiss)":"icon_kiss.svg",
-    "(lol)":"icon_lol.svg",
-    "(neutral)":"icon_neutral.svg",
-    "(sad)":"icon_sad.svg",
-    "(sick)":"icon_sick.svg",
-    "(smile)":"icon_smile.svg",
-    "(surprised)":"icon_surprised.svg",
-    "(tongue)":"icon_tongue.svg",
-    "(wink)":"icon_wink.svg",
+
+socket.on('connect', auth);
+socket.on('reconnect', auth);
+function auth(d) {
+    rooms={};
+    roomnames={};
+    updateSidebar();
+    setTimeout(function(){
+        socket.emit("auth", token);
+        $(".connecting").addClass("hidden");
+        $("#m").focus();
+    }, 500);
 }
+socket.on('disconnect', function(d) {
+    $(".connecting").removeClass("hidden");
+});
+
+socket.io.on('connect_timeout', function(e) {
+    console.log("socket timeout");
+    console.log(e);
+});
+socket.io.on('connect_error', function(e) {
+    console.log("socket error");
+    console.log(e);
+});
+socket.io.on('reconnect_error', function(e) {
+    console.log("socket reconnect error");
+    console.log(e);
+});
+
+
 
 $(document).ready(function(){
     $( window ).resize(function() {
@@ -109,6 +96,19 @@ $(document).ready(function(){
         socket.emit("ping", JSON.stringify({"t": token}));
         setTimeout(sendPing, 149000);//~2.5 minutes. User timeouts every 5 minutes
         //TODO bandwidth optimize this! probably no need to send a full on token each time.
+    }
+
+    timeCalc();
+    function timeCalc() {
+        $("span.time").each(function(index, el){
+            var d = new Date(parseInt($(el).attr('data-time')));
+            var fuz = fuzzyTime(d);
+            var t = $(el).html();
+            if (t!=fuz) {
+                $(el).html(fuz);
+            }
+        });
+        setTimeout(timeCalc, 60000);
     }
 
     $("#messages").on('click', '.userprofilelink', function(e) {
@@ -184,27 +184,6 @@ if ("Notification" in window) {
     window.Notification = {permission:"denied"};
 }
 
-var socket = io("", {reconnectionDelayMax:1000, reconnectionDelay:1000, timeout: 10000000, multiplex:false});
-socket.io.on('connect_timeout', function(e) {
-    console.log("socket timeout");
-    console.log(e);
-});
-socket.io.on('connect_error', function(e) {
-    console.log("socket error");
-    console.log(e);
-});
-socket.io.on('reconnect_error', function(e) {
-    console.log("socket reconnect error");
-    console.log(e);
-});
-
-var rooms = {};
-var roomnames = {};
-var cur_room = "";
-var cur_dur = "48h";
-var token = window.location.hash.substring(1);
-var switchOnJoin = true;
-
 $(window).on('beforeunload', function(){
     socket.close();
 });
@@ -221,6 +200,18 @@ $('form').submit(function(){
         }
     }
     return false;
+});
+
+$("#m").on('keydown', function(ev) {
+    if (ev.keyCode==13) {
+        if (ev.ctrlKey) {
+            $("#m").val($("#m").val()+"\n");
+        } else {
+            $('form').submit();
+            ev.preventDefault();
+            return false;
+        }
+    }
 });
 
 //menu buttons.
@@ -252,10 +243,6 @@ $("#btninvitenewuser").on('click', function() {
 });
 $("#btnuserlist").on('click', function() {
     socket.emit("onlineusers",JSON.stringify({"t": token}));
-});
-
-socket.on('connect', function(d) {
-    socket.emit("auth", token);
 });
 
 socket.on('chatm', function(d){
@@ -293,8 +280,8 @@ socket.on('inviteusertoroom', function(d) {
     var m = "<span class='prefix'>You've been invited to join </span>";
     m+="<a class='joinroom' data-room='"+d.room+"'>"+d.name+"</a>";
     m+="<div class='clearfloat'></div>";
-    $('#messages').append($('<li>').html(m));
-
+    //$('#messages').append($('<li>').html(m));
+    appendSystemMessage(m, 0);
     scrollToBottom();
 });
 
@@ -321,8 +308,8 @@ socket.on('onlineusers', function(d) {
         m+="<a class='userprofilelink onlineuser' data-uid='"+d.uids[i]+"'>"+d.nicks[i]+"</a>";
     }
     m+="<div class='clearfloat'></div>";
-    $('#messages').append($('<li>').html(m));
-
+    $('#messages li.userlist').slideUp(500);
+    appendSystemMessage(m,0,'userlist');
     scrollToBottom();
 });
 
@@ -333,8 +320,8 @@ socket.on('roomlist', function(d){
         m+="<a class='joinroom' data-room='"+k+"'>"+d[k]+"</a>";
     }
     m+="<div class='clearfloat'></div>";
-    $('#messages').append($('<li>').html(m));
-
+    $('#messages li.roomlist').slideUp(500);
+    appendSystemMessage(m, 0, 'roomlist');
     scrollToBottom();
 });
 
@@ -365,42 +352,47 @@ socket.on('join', function(d){
         d.maxexptime = d.maxexptime.replace("0s","");
 
     if (!(d.name in roomnames)) {
-        $('#messages').append($('<li>').text("Joined "+d.name+" ("+d.minexptime+" - "+d.maxexptime+")"));
+        appendSystemMessage("Joined "+d.name+" ("+d.minexptime+" - "+d.maxexptime+")", 3000);
         rooms[d.room] = {users: [], messages: [], friendlyname: d.name, mcount: 0, minexptime: d.minexptime, maxexptime: d.maxexptime};
         roomnames[d.name] = d.room;
         if (d.room=="lobby" || switchOnJoin) {
             switchRoom(d.room);
             switchOnJoin=false;
         }
+        //request history
+        socket.emit("history",JSON.stringify({"t": token, "room": d.room}));
     }
     updateSidebar();
 });
 
 socket.on('joined', function(d){
     var d=JSON.parse(d);
-    $('#messages').append($('<li>').text(d.nick +" joined "+d.name));
+    appendSystemMessage(d.nick +" joined "+d.name, 3000);
     rooms[d.room].users.push({uid:d.uid, nick:d.nick});
 });
 
 socket.on('auth_error', function(d){
-    $('#messages').append($('<li>').text("Error: "+d));
+    appendSystemMessage("Error: "+d,5000);
     if (d=="Invalid Token") {
-        $('#messages').append($('<li>').html("<a class='signup' href='/signup'>Sign up with your Invite Code</a>"));
+        appendSystemMessage("<a class='signup' href='/signup'>Sign up with your Invite Code</a>",0);
     }
     $("#m").prop('disabled', false);
 });
 
 socket.on('auth', function(d){
-    $('#messages').append($('<li>').text("Logged in successfully"));
+    appendSystemMessage("Logged in successfully",3000);
 });
 
 socket.on('invitenewuser', function(d){
     var d=JSON.parse(d);
-    $('#messages').append($('<li>').html("Invite Key: "+d.key+" <a href='/signup/#"+d.key+"'>(signup link)</a>"));
+    appendSystemMessage("Invite Key: "+d.key+" <a href='/signup/#"+d.key+"'>(signup link)</a>",0);
 });
 
 socket.on('deletechatm', function(d){
     $("#messages li[data-msgid='"+d+"']").html("<i>Removed message</i>");
+    setTimeout(function(){
+        $("#messages li[data-msgid='"+d+"']").slideUp(1000);
+    }, 3000);
 });
 
 function updateSidebar() {
@@ -440,6 +432,19 @@ function scrollToBottom() {
     $(window).scrollTop($('body')[0].scrollHeight);
 }
 
+function appendSystemMessage(msg, lifetimeMs, cssclass) {
+    if (typeof cssclass=="undefined")
+        cssclass="";
+
+    var sm = $('<li>').addClass("sysmsg").addClass(cssclass).html(msg);
+    $('#messages').append(sm);
+    if (lifetimeMs>0) {
+        setTimeout(function(){
+            sm.slideUp(1000);
+        }, lifetimeMs);
+    }
+}
+
 function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
     var hide = "";
     if (room!=cur_room) {
@@ -477,6 +482,8 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
             }
         });
 
+        m = m.split("\n").join("<br>");
+
         //icons
         m = processIcons(m);
     }
@@ -485,6 +492,7 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
         avatar = "";
     }
 
+    var rawtime=time*1000;
     if (typeof time=="undefined") {
         time="";
     } else {
@@ -497,7 +505,7 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
     }
 
     $('#messages').append($('<li>')
-        .html("<div class='useravatar'>"+avatarimg+"</div><div class='messagecontainer'><a data-uid='"+uid+"' class='userprofilelink nick'>"+nick+"</a> <span class='time'>"+time+"</span> <br><span class='messagetext'>"+m+"</span>")
+        .html("<div class='useravatar'>"+avatarimg+"</div><div class='messagecontainer'><a data-uid='"+uid+"' class='userprofilelink nick'>"+nick+"</a> <span class='time' data-time='"+rawtime+"'>"+time+"</span> <br><span class='messagetext'>"+m+"</span>")
         .attr("data-msgid", id)
         .attr("data-room", room)
         .attr("title",id)
@@ -536,8 +544,12 @@ function requestDeleteMessage(msgid) {
 }
 
 function switchRoom(room) {
+    if (room!="lobby") {
+        $("#messages li.sysmsg").hide();
+    }
+
     if (typeof rooms[room]=="undefined") {
-        appendChatMessage("","lobby", "Lobby", "SYSTEM", "Unknown room", "");
+        appendSystemMessage("Unknown room", 5000);
     } else {
         cur_room = room;
     }
@@ -594,7 +606,7 @@ function handleCommand(socket,c) {
     var ca = c.split(" ");
     switch (ca[0]) {
         case "/help":
-            $('#messages').append($('<li>').html(" \
+            appendSystemMessage(" \
                 /leave - Leaves the current room <br>\
                 /ban admin uid - Bans the UID permanently <br>\
                 /unban admin uid - UnBans the UID <br>\
@@ -602,7 +614,7 @@ function handleCommand(socket,c) {
                 /join room-name - Attempts to join a room by name <br>\
                 /switch room-name - Switches your chat focus to a room by name <br>\
                 /roomlist - Lists all public rooms with links to join <br>\
-            "));
+            ", 0);
             break;
         case "/leave":
             socket.emit("leave", JSON.stringify({"t": token, "room": cur_room}));
@@ -637,8 +649,62 @@ function handleCommand(socket,c) {
             socket.emit("onlineusers",JSON.stringify({"t": token}));
             break;
         default:
-            $('#messages').append($('<li>').text("Unknown command"));
+            appendSystemMessage("Unknown command", 3000);
             break;
     }
     $('#m').val('');
 }
+
+
+var icon_lib = {
+    ">:|":"icon_angry.svg",
+    ">:(":"icon_angry.svg",
+    ":D":"icon_bigsmile.svg",
+    ":-D":"icon_bigsmile.svg",
+    ":$":"icon_blush.svg",
+    ":-$":"icon_blush.svg",
+    "o.O":"icon_confused.svg",
+    "O.o":"icon_confused.svg",
+    "O_o":"icon_confused.svg",
+    "o_O":"icon_confused.svg",
+    "8)":"icon_cool.svg",
+    "8-)":"icon_cool.svg",
+    ";(":"icon_cry.svg",
+    ":'(":"icon_cry.svg",
+    ";-(":"icon_cry.svg",
+    "(important)":"icon_important.svg",
+    ":*":"icon_kiss.svg",
+    "XD":"icon_lol.svg",
+    ":|":"icon_neutral.svg",
+    ":-|":"icon_neutral.svg",
+    ":(":"icon_sad.svg",
+    ":-|":"icon_neutral.svg",
+    ":-(":"icon_sad.svg",
+    ":-#":"icon_sick.svg",
+    ":)":"icon_smile.svg",
+    ":-)":"icon_smile.svg",
+    ":O":"icon_surprised.svg",
+    ":-O":"icon_surprised.svg",
+    "(thinking)":"icon_think.svg",
+    ":P":"icon_tongue.svg",
+    ":-P":"icon_tongue.svg",
+    "(twisted)":"icon_twisted.svg",
+    ";)":"icon_wink.svg",
+    ";-)":"icon_wink.svg",
+
+    "(angry)":"icon_angry.svg",
+    "(bigsmile)":"icon_bigsmile.svg",
+    "(blush)":"icon_blush.svg",
+    "(confused)":"icon_confused.svg",
+    "(shades)":"icon_cool.svg",
+    "(cry)":"icon_cry.svg",
+    "(kiss)":"icon_kiss.svg",
+    "(lol)":"icon_lol.svg",
+    "(neutral)":"icon_neutral.svg",
+    "(sad)":"icon_sad.svg",
+    "(sick)":"icon_sick.svg",
+    "(smile)":"icon_smile.svg",
+    "(surprised)":"icon_surprised.svg",
+    "(tongue)":"icon_tongue.svg",
+    "(wink)":"icon_wink.svg",
+};

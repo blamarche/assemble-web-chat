@@ -36,6 +36,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
   </head>
 
   <body>
+    <div class="row connecting">Connecting...</div>
     <div class="container-fluid">
 
         <!-- UI -->
@@ -51,13 +52,13 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
                     <div class="clearfloat"></div>
                 </li>
             </ul>
-            <ul id="messages"><li>Assemble Web Chat is open source software. Check it out on <a href="https://github.com/blamarche/assemble-web-chat">Github</a></li></ul>
+            <ul id="messages"><li class="sysmsg">Assemble Web Chat is open source software. Check it out on <a href="https://github.com/blamarche/assemble-web-chat">Github</a></li></ul>
         </div>
 
         <form action="" class="msg">
           <div class="row">
               <div class="col-xs-9">
-              <input id="m" autocomplete="off" />
+              <textarea id="m" autocomplete="off" ></textarea>
               </div>
 
               <div class="col-xs-1">

@@ -22,6 +22,7 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
+	"html"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -66,11 +67,11 @@ func main() {
 	clientconfig, err := ioutil.ReadFile(cfgfile)
 	if err != nil {
 		log.Println("Error reading config.json:", err)
-	}
-
-	cfg, err = config.LoadConfig(cfg, string(clientconfig))
-	if err != nil {
-		log.Fatal("Error parsing config.json:", err)
+	} else {
+		cfg, err = config.LoadConfig(cfg, string(clientconfig))
+		if err != nil {
+			log.Fatal("Error parsing config.json:", err)
+		}
 	}
 
 	//grab/create enc key
@@ -137,10 +138,12 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 				r.FormValue("avatar"),
 				r.FormValue("alertaddress"))
 
-			service.Users[token.Path("uid").Data().(string)] = &assemble.User{}
-			service.Users[token.Path("uid").Data().(string)].LastAlert = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
-			service.Users[token.Path("uid").Data().(string)].LastAct = time.Now()
-			service.Users[token.Path("uid").Data().(string)].Token = token
+			/*
+				service.Users[token.Path("uid").Data().(string)] = &assemble.User{}
+				service.Users[token.Path("uid").Data().(string)].LastAlert = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+				service.Users[token.Path("uid").Data().(string)].LastAct = time.Now()
+				service.Users[token.Path("uid").Data().(string)].Token = token
+			*/
 
 			competok := utils.Compress([]byte(token.String()))
 			etok, _ := utils.Encrypt(service.UserKey, competok.Bytes())
@@ -215,6 +218,7 @@ func socketHandlers(so socketio.Socket) {
 
 		//send list of online users
 		service.SendOnlineUserList(so)
+		so.Emit("roomlist", service.CreateRoomList())
 
 		//add user to online status
 		ou := assemble.OnlineUser{So: &so, LastPing: time.Now()}
@@ -309,7 +313,7 @@ func socketHandlers(so socketio.Socket) {
 
 	so.On("invitenewuser", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
 		em := g.Path("email").Data().(string)
-		fmt.Println(uid, "invited", em)
+		fmt.Println(uid, "invited", html.EscapeString(em))
 
 		//TODO email invite
 		id := uuid.NewV4().String()
@@ -381,7 +385,7 @@ func socketHandlers(so socketio.Socket) {
 	}))
 
 	so.On("createroom", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
-		name := g.Path("roomname").Data().(string)
+		name := html.EscapeString(g.Path("roomname").Data().(string))
 		isprivate := g.Path("isprivate").Data().(bool)
 		minexptime := g.Path("minexptime").Data().(string)
 		maxexptime := g.Path("maxexptime").Data().(string)
@@ -414,9 +418,14 @@ func socketHandlers(so socketio.Socket) {
 
 	so.On("leave", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
 		//TODO handle "leaving" a direct message room
+		//TODO remove from members list, unless its lobby
 		so.Emit("leave", g.Path("room").Data().(string))
 		so.Leave(g.Path("room").Data().(string))
 		service.BroadcastUserLeave(g.Path("room").Data().(string), uid, so)
+	}))
+
+	so.On("history", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
+		service.SendRoomHistory(so, uid, g.Path("room").Data().(string))
 	}))
 
 	so.On("join", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
@@ -446,9 +455,7 @@ func socketHandlers(so socketio.Socket) {
 		_, inroom := service.Rooms[room].MemberUIDs[uid]
 		if !inroom && service.CanJoin(uid, room, true) {
 			service.AddToRoom(so, uid, room)
-		} else if inroom {
-			service.SendRoomHistory(so, uid, room)
-		} else {
+		} else if !inroom {
 			so.Emit("auth_error", "You can't join this room")
 		}
 	}))
@@ -464,9 +471,9 @@ func socketHandlers(so socketio.Socket) {
 					so.Emit("deletechatm", msgid)
 					so.BroadcastTo(room, "deletechatm", msgid)
 					service.Rooms[room].Messages = append(service.Rooms[room].Messages[:i], service.Rooms[room].Messages[i+1:]...)
-				} else {
-					so.Emit("auth_error", "Invalid UID, not your message")
-				}
+				} //else {
+				//so.Emit("auth_error", "Invalid UID, not your message")
+				//}
 				return
 			}
 		}
@@ -480,6 +487,8 @@ func socketHandlers(so socketio.Socket) {
 		g.SetP(service.Users[uid].Token.Path("nick").Data().(string), "nick")
 		g.SetP(uuid.NewV4().String(), "msgid")
 		g.SetP(service.Users[uid].Token.Path("avatar").Data().(string), "avatar")
+
+		g.SetP(html.EscapeString(g.Path("m").Data().(string)), "m")
 
 		//validate if user is in this room
 		if g.Path("room").Data() == nil {
