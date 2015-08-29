@@ -22,6 +22,7 @@ var cur_room = "";
 var cur_dur = "48h";
 var token = window.location.hash.substring(1);
 var switchOnJoin = true;
+var hasJoined = false;
 
 
 socket.on('connect', auth);
@@ -32,8 +33,6 @@ function auth(d) {
     updateSidebar();
     setTimeout(function(){
         socket.emit("auth", token);
-        $(".connecting").addClass("hidden");
-        $("#m").focus();
     }, 500);
 }
 socket.on('disconnect', function(d) {
@@ -326,6 +325,12 @@ socket.on('roomlist', function(d){
 });
 
 socket.on('history', function(d){
+    if (!hasJoined) {
+        $(".connecting").addClass("hidden");
+        $("#m").focus();
+        hasJoined=true;
+    }
+
     var d=JSON.parse(d);
     //console.log(d);
     for (var i=0; i<d.history.length; i++) {
