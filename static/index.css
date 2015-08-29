@@ -16,7 +16,7 @@ body { font: 13px Helvetica, Arial; width: 100%; height: 100%;}
 .row { margin-left:0; margin-right:0; }
 form.msg { background: #000; padding: 3px; position: fixed; bottom: 0; left: 0; width: 100%; }
 form.msg div { padding-left: 1px; padding-right: 1px; }
-form.msg input, form.msg textarea { border: 0; padding: 10px; width: 100%; height: 36px; font-size: 11px; }
+form.msg input, form.msg textarea { border: 0; padding: 4px; width: 100%; height: 36px; font-size: 12px; }
 form.msg .btn { padding: 3px; height:36px !important; width:100%; overflow:hidden; }
 form.msg .glyphicon { margin-left: -2px; }
 form.msg .glyphicon img { width: 20px; margin-top: -4px; }
@@ -26,10 +26,12 @@ form.msg .glyphicon img { width: 20px; margin-top: -4px; }
 #messages li { padding: 5px 10px; clear:both; line-height: 18px; border-left: 5px solid #d4d4d4; }
 #messages li:nth-child(odd) { background: #f4f4f4; border-left: 5px solid #d4d4d4; }
 #messages li.sysmsg { font-style: italic; border-left: 5px solid #0a7; background: white;}
+#messages .messagetext { word-wrap: break-word; hyphens: auto; }
 #messages li img.smiley { width: 18px; }
-    #messages li img.smiley.large {
-        width: 64px;
-    }
+#messages li img.smiley.large {
+    width: 64px;
+}
+
 #messages li a.joinroom, #messages li a.signup {
     display: block;
     float: left;
@@ -72,6 +74,7 @@ form.msg .glyphicon img { width: 20px; margin-top: -4px; }
         font-size: 10px;
         float: right;
         margin-top: 3px;
+        line-height: normal;
     }
 
 #iconselect .modal-body { text-align: center; }
@@ -121,13 +124,13 @@ form.msg .glyphicon img { width: 20px; margin-top: -4px; }
     #sidebar .menuitems div { width: 26px; float:left; }
     #sidebar .menuitems button { border:none; background: transparent; }
     #sidebar .menuitems span {
-      float:none;
-      display: block;
-      background-color: transparent;
-      border-radius: 5px;
-      padding: 0px 5px;
-      font-size: 21px;
-      font-weight: normal;
+        float:none;
+        display: block;
+        background-color: transparent;
+        border-radius: 5px;
+        padding: 0px 5px;
+        font-size: 21px;
+        font-weight: normal;
     }
 
 img.avatar { width: 32px; height: 32px; }
