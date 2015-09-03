@@ -120,12 +120,15 @@ func (svc *Service) alertSender() {
 			if k != "lobby" && len(v.Messages) > 0 {
 				lastmsgstamp := v.Messages[len(v.Messages)-1].Path("time").Data().(int64)
 
-				//TODO client-side option with auth that disables notifications per-user
 				for uid := range v.MemberUIDs {
 					_, isonline := svc.OnlineUsers[uid]
 					if !isonline {
 						alertaddr := svc.Users[uid].Token.Path("alertaddress").Data()
-						if alertaddr != nil && lastmsgstamp > svc.Users[uid].LastAlert.Unix() && lastmsgstamp > svc.Users[uid].LastAct.Unix() {
+						if alertaddr != nil &&
+							svc.Users[uid].AlertsEnabled &&
+							lastmsgstamp > svc.Users[uid].LastAlert.Unix() &&
+							lastmsgstamp > svc.Users[uid].LastAct.Unix() {
+
 							diff := time.Now().Sub(svc.Users[uid].LastAlert)
 							if diff > wait {
 								svc.Users[uid].LastAlert = time.Now()
@@ -318,6 +321,27 @@ func (svc *Service) SendOnlineUserList(so socketio.Socket) {
 	so.Emit("onlineusers", cu.String())
 }
 
+func (svc *Service) SendRoomUserList(so socketio.Socket, room string) {
+	//TODO consoldate with SendOnlineUserList
+	rm := svc.Rooms[room]
+
+	cu, _ := gabs.ParseJSON([]byte("{}"))
+	uids := []string{}
+	nicks := []string{}
+	online := []bool{}
+	for k := range rm.MemberUIDs {
+		uids = append(uids, k)
+		nicks = append(nicks, svc.Users[k].Token.Path("nick").Data().(string))
+		_, ol := svc.OnlineUsers[k]
+		online = append(online, ol)
+	}
+	cu.SetP(uids, "uids")
+	cu.SetP(nicks, "nicks")
+	cu.SetP(online, "online")
+
+	so.Emit("roomusers", cu.String())
+}
+
 func (svc *Service) BroadcastUserLeave(room string, uid string, so socketio.Socket) {
 	bc, _ := gabs.ParseJSON([]byte("{}"))
 	bc.SetP(svc.Users[uid].Token.Path("uid").Data().(string), "uid")
@@ -483,6 +507,7 @@ func (svc *Service) ValidateUserToken(so socketio.Socket, msg string) (string, e
 		svc.Users[uid].LastAlert = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 		svc.Users[uid].LastAct = time.Now()
 		svc.Users[uid].Token = token
+		svc.Users[uid].AlertsEnabled = true
 		cleanToken(svc.Users[uid].Token)
 		if so != nil {
 			svc.AddToRoom(so, uid, "lobby")
@@ -492,6 +517,8 @@ func (svc *Service) ValidateUserToken(so socketio.Socket, msg string) (string, e
 	} else {
 		if svc.Users[uid].Token.Path("privid").Data().(string) != token.Path("privid").Data().(string) {
 			return "", &Err{"Bad privID"}
+		} else {
+			svc.Users[uid].Token = token //do this because a user might have updated profile info
 		}
 	}
 

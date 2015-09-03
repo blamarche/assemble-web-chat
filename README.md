@@ -20,22 +20,23 @@ Assemble is a GPLv3, database-less, full featured html chat system meant to be q
 * Private chat rooms with invite
 * Direct Messaging
 * Text message / email notifications
-* Basic smilies
+* Smilies
+* Auto-embed video links
 
-## Features Yet To Be Implemented
-* List of users in a room, plus online status
-* Update page title when new messages and not focused. When focused, reset back
-* Client side options for notification disable, sound effects etc.
-* Sfx on-message
+## Yet To Be Implemented
+* Ability to change info in user token but keep UID/PrivID and get updated login url back
+* Thumbs up / down smiley
 * Validation / error proofing
+* Update page title when new messages and not focused. When focused, reset back
 * Avatar generator
 * Client-side addition of custom "emoticons/stickers"
 * User token 'sharing' to other user-owned devices once signed in
 * Moderation process (ie /kick for the creator)
 * "@user" highlights in messages
-* Ability to update info in user token and get updated login url back
+* Confirm leave room dialog
 
 ## Other Features to Consider
+* Optional token pass-phrase set on sign-up
 * VOIP
 * In-memory encryption of messages
 * Inter-server communication system

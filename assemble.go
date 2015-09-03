@@ -302,6 +302,18 @@ func socketHandlers(so socketio.Socket) {
 		service.SendOnlineUserList(so)
 	}))
 
+	so.On("roomusers", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
+		//check room, check uid in room
+		room := g.Path("room").Data().(string)
+		r, rok := service.Rooms[room]
+		if rok {
+			_, ismember := r.MemberUIDs[uid]
+			if ismember {
+				service.SendRoomUserList(so, room)
+			}
+		}
+	}))
+
 	so.On("ping", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
 		//TODO optimize for network performance
 		_, ok2 := service.OnlineUsers[uid]
@@ -311,13 +323,17 @@ func socketHandlers(so socketio.Socket) {
 	}))
 
 	so.On("invitenewuser", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
-		em := g.Path("email").Data().(string)
-		fmt.Println(uid, "invited", html.EscapeString(em))
+		if g.Path("email").Data() != nil {
+			em := g.Path("email").Data().(string)
+			fmt.Println(uid, "invited", html.EscapeString(em))
 
-		id := uuid.NewV4().String()
-		service.Invites[id] = em
+			id := uuid.NewV4().String()
+			service.Invites[id] = em
 
-		so.Emit("invitenewuser", "{\"key\": \""+id+"\"}")
+			so.Emit("invitenewuser", "{\"key\": \""+id+"\"}")
+		} else {
+			so.Emit("auth_error", "Invalid data received. Try again.")
+		}
 	}))
 
 	so.On("roomlist", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
@@ -472,12 +488,21 @@ func socketHandlers(so socketio.Socket) {
 					so.Emit("deletechatm", msgid)
 					so.BroadcastTo(room, "deletechatm", msgid)
 					service.Rooms[room].Messages = append(service.Rooms[room].Messages[:i], service.Rooms[room].Messages[i+1:]...)
-				} //else {
-				//so.Emit("auth_error", "Invalid UID, not your message")
-				//}
+				}
 				return
 			}
 		}
+	}))
+
+	so.On("setalerts", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
+		enable := g.Path("enabled").Data().(bool)
+		service.Users[uid].AlertsEnabled = enable
+		if enable {
+			so.Emit("setalerts", "Alerts enabled")
+		} else {
+			so.Emit("setalerts", "Alerts disabled")
+		}
+		log.Println(uid, "set alerts =", enable)
 	}))
 
 	so.On("chatm", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {

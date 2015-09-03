@@ -23,8 +23,19 @@ var cur_dur = "48h";
 var token = window.location.hash.substring(1);
 var switchOnJoin = true;
 var hasJoined = false;
+var enableSound = true;
 
+//load settings from local
+if (storageAvailable('localStorage')) {
+    if (localStorage.getItem("enableSound"))
+        enableSound = localStorage.getItem("enableSound") == "true";
+    if (localStorage.getItem("cur_dur"))
+        cur_dur = localStorage.getItem("cur_dur");
+} else {
+    //console.log("No local storage");
+}
 
+//socket events
 socket.on('connect', auth);
 socket.on('reconnect', auth);
 function auth(d) {
@@ -33,10 +44,11 @@ function auth(d) {
     updateSidebar();
     setTimeout(function(){
         socket.emit("auth", token);
-    }, 500);
+    }, 250);
 }
 socket.on('disconnect', function(d) {
     $(".connecting").removeClass("hidden");
+    hasJoined=false;
 });
 
 socket.io.on('connect_timeout', function(e) {
@@ -128,6 +140,24 @@ $(document).ready(function(){
         setTimeout(timeCalc, 60000);
     }
 
+    $('#enablealerts').on('click', function(e) {
+        socket.emit("setalerts", JSON.stringify({"t": token, "enabled": true}));
+    });
+    $('#disablealerts').on('click', function(e) {
+        socket.emit("setalerts", JSON.stringify({"t": token, "enabled": false}));
+    });
+
+    $('#enablesound').on('click', function(e) {
+        enableSound = true;
+        if (storageAvailable('localStorage'))
+            localStorage.setItem("enableSound", enableSound);
+    });
+    $('#disablesound').on('click', function(e) {
+        enableSound = false;
+        if (storageAvailable('localStorage'))
+            localStorage.setItem("enableSound", enableSound);
+    });
+
     $("#messages").on('click', '.userprofilelink', function(e) {
         socket.emit("userinfo", JSON.stringify({"t": token, "uid": $(e.currentTarget).attr("data-uid")}));
     });
@@ -188,8 +218,10 @@ $(document).ready(function(){
         return false;
     });
 
-    $('#messageduration .currentduration').change(function(e) {
-        cur_dur = $('#messageduration .currentduration').val();
+    $('#options .currentduration').change(function(e) {
+        cur_dur = $('#options .currentduration').val();
+        if (storageAvailable('localStorage'))
+            localStorage.setItem("cur_dur", cur_dur);
     });
 });
 
@@ -243,8 +275,11 @@ $("#btnroomlist").on('click', function() {
 $("#btncreateroom").on('click', function() {
     $("#createroom").modal();
 });
-$("#btnduration").on('click', function() {
+/*$("#btnduration").on('click', function() {
     $("#messageduration").modal();
+});*/
+$("#btnoptions").on('click', function() {
+    $("#options").modal();
 });
 $("#btninvitenewuser").on('click', function() {
     var emm=prompt("Enter a message for the invited user (optional):");
@@ -253,6 +288,9 @@ $("#btninvitenewuser").on('click', function() {
 });
 $("#btnuserlist").on('click', function() {
     socket.emit("onlineusers",JSON.stringify({"t": token}));
+});
+$("#btnroomusers").on('click', function() {
+    socket.emit("roomusers",JSON.stringify({"t": token, "room": cur_room}));
 });
 
 socket.on('chatm', function(d){
@@ -264,6 +302,10 @@ socket.on('chatm', function(d){
         $("#m").focus();
     }
     $("#m").prop('disabled', false);
+
+    if (!document.hasFocus() && enableSound) {
+        $("#sfxbeep")[0].play();
+    }
 
     try {
         if (Notification.permission==="granted" && (cur_room!=d.room || !document.hasFocus()) && d.m.indexOf("data:image/")!=0) {
@@ -282,9 +324,18 @@ socket.on('chatm', function(d){
     }
 });
 
+socket.on('setalerts', function(msg) {
+    appendSystemMessage(msg, 30000)
+});
+
 socket.on('leave', function(room) {
     delete rooms[room];
-    //TODO is this delete working right?
+    for (var n in roomnames) {
+        if (roomnames[n]==room) {
+            delete roomnames[n]
+            break;
+        }
+    }
     $("#sidebar li[data-room='"+room+"']").remove();
 });
 
@@ -313,9 +364,24 @@ socket.on('userinfo', function(d) {
     $("#userprofile").modal();
 })
 
+socket.on('roomusers', function(d) {
+    var d=JSON.parse(d);
+    var m = "<span class='prefix'>Users in this room: </span>";
+    for (var i=0; i<d.uids.length; i++) {
+        if (d.online[i])
+            m+="<a class='userprofilelink onlineuser' data-uid='"+d.uids[i]+"'>"+d.nicks[i]+"</a>";
+        else
+            m+="<a class='userprofilelink onlineuser offline' data-uid='"+d.uids[i]+"'>"+d.nicks[i]+"</a>";
+    }
+    m+="<div class='clearfloat'></div>";
+    $('#messages li.userlist').slideUp(500);
+    appendSystemMessage(m,0,'userlist');
+    scrollToBottom();
+});
+
 socket.on('onlineusers', function(d) {
     var d=JSON.parse(d);
-    var m = "<span class='prefix'>Online Users: </span>";
+    var m = "<span class='prefix'>Total Online Users: </span>";
     for (var i=0; i<d.uids.length; i++) {
         m+="<a class='userprofilelink onlineuser' data-uid='"+d.uids[i]+"'>"+d.nicks[i]+"</a>";
     }
@@ -339,9 +405,7 @@ socket.on('roomlist', function(d){
 
 socket.on('history', function(d){
     if (!hasJoined) {
-        $(".connecting").addClass("hidden");
-        $("#m").focus();
-        hasJoined=true;
+        setJoined();
     }
 
     var d=JSON.parse(d);
@@ -379,6 +443,8 @@ socket.on('join', function(d){
         var t = (new Date()).getTime()/1000;
         appendChatMessage("", d.room, d.name, "<em>SYSTEM</em>", "Joined "+d.name+" ("+d.minexptime+" - "+d.maxexptime+")", "", "/icons/icon_important.svg", t);
         socket.emit("history",JSON.stringify({"t": token, "room": d.room}));   //request history
+    } else if (hasJoined) {
+        setJoined();
     }
     updateSidebar();
 });
@@ -412,6 +478,12 @@ socket.on('deletechatm', function(d){
         $("#messages li[data-msgid='"+d+"']").slideUp(1000);
     }, 3000);
 });
+
+function setJoined() {
+    $(".connecting").addClass("hidden");
+    $("#m").focus();
+    hasJoined=true;
+}
 
 function updateSidebar() {
     //update sidebar to hold message counts and list active chat rooms
@@ -493,6 +565,18 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
                              match.getUrl().indexOf( '.gif' ) !== -1  )
                         {
                             return "<a href='"+href+"' target='_blank'>"+href+"</a><br><img src='"+href+"' class='autolink'></img>";
+                        }
+                        else if ( match.getUrl().indexOf( '.mp4' ) !== -1 ||
+                             match.getUrl().indexOf( '.ogg' ) !== -1 ||
+                             match.getUrl().indexOf( '.webm' ) !== -1 )
+                        {
+                            return "<a href='"+href+"' target='_blank'>"+href+"</a><br><video controls class='autolink'><source src='"+href+"'></video>";
+                        }
+                        else if ( match.getUrl().indexOf('youtube.com/watch?v=') !== -1 )
+                        {
+                            //<iframe width="560" height="315" src="https://www.youtube.com/embed/U3pXNt7zqIU" frameborder="0" allowfullscreen></iframe>
+                            var frame = '<iframe class="autolink" height="315" src="'+match.getUrl().replace('youtube.com/watch?v=', 'youtube.com/embed/')+'" frameborder="0" allowfullscreen></iframe>';
+                            return frame;
                         }
                         break;
                 }
@@ -674,6 +758,19 @@ function handleCommand(socket,c) {
     $('#m').val('');
 }
 
+
+function storageAvailable(type) {
+	try {
+		var storage = window[type],
+			x = '__storage_test__';
+		storage.setItem(x, x);
+		storage.removeItem(x);
+		return true;
+	}
+	catch(e) {
+		return false;
+	}
+}
 
 var icon_lib = {
     ">:|":"icon_angry.svg",

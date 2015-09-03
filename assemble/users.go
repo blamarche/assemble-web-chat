@@ -31,7 +31,8 @@ type OnlineUser struct {
 
 // User holds info about a user who has used this server
 type User struct {
-	LastAlert time.Time
-	LastAct   time.Time
-	Token     *gabs.Container
+	LastAlert     time.Time
+	LastAct       time.Time
+	Token         *gabs.Container
+	AlertsEnabled bool
 }

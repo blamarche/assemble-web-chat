@@ -46,9 +46,11 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
                 <li class="menuitems clearfloat">
                     <div id="btnroomlist" title="List All Public Rooms"><button><span class="glyphicon glyphicon-list"></span></button></div>
                     <div id="btncreateroom" title="Create A New Room"><button><span class="glyphicon glyphicon-plus-sign"></span></button></div>
-                    <div id="btnduration" title="Set message duration"><button><span class="glyphicon glyphicon-time"></span></button></div>
+                    <!--<div id="btnduration" title="Set message duration"><button><span class="glyphicon glyphicon-time"></span></button></div>-->
                     <div id="btninvitenewuser" title="Invite a new user to Assemble"><button><span class="glyphicon glyphicon-envelope"></span></button></div>
-                    <div id="btnuserlist" title="List online users"><button><span class="glyphicon glyphicon-user"></span></button></div>
+                    <div id="btnuserlist" title="List online users"><button><span class="glyphicon glyphicon-globe"></span></button></div>
+                    <div id="btnroomusers" title="List users in this room"><button><span class="glyphicon glyphicon-user"></span></button></div>
+                    <div id="btnoptions" title="Show options"><button><span class="glyphicon glyphicon-cog"></span></button></div>
                     <div class="clearfloat"></div>
                 </li>
             </ul>
@@ -82,35 +84,6 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
     </div>
 
     <div id="dialogs">
-        <div id="messageduration" class="modal fade">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title">Your Message Duration</h4>
-              </div>
-              <div class="modal-body">
-                <form>
-                    <div class="form-group"><select class="form-control currentduration">
-                        <option value="30s">30 seconds</option>
-                        <option value="1m">1 minute</option>
-                        <option value="3m">3 minutes</option>
-                        <option value="5m">5 minutes</option>
-                        <option value="15m">15 minutes</option>
-                        <option value="30m">30 minutes</option>
-                        <option value="1h">1 hour</option>
-                        <option value="8h">8 hours</option>
-                        <option value="24h">24 hours</option>
-                        <option value="48h" selected>48 hours</option>
-                    </select></div>
-                </form>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
-              </div>
-            </div><!-- /.modal-content -->
-          </div><!-- /.modal-dialog -->
-        </div><!-- /.modal -->
 
         <div id="createroom" class="modal fade">
           <div class="modal-dialog">
@@ -152,6 +125,41 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
               <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>
                 <button id="createnewroom" type="button" class="btn btn-success" data-dismiss="modal">Create</button>
+              </div>
+            </div><!-- /.modal-content -->
+          </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
+
+        <div id="options" class="modal fade">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Options</h4>
+              </div>
+              <div class="modal-body">
+                <form>
+                    <div class="form-group"><label>Message Duration</label><select class="form-control currentduration">
+                        <option value="30s">30 seconds</option>
+                        <option value="1m">1 minute</option>
+                        <option value="3m">3 minutes</option>
+                        <option value="5m">5 minutes</option>
+                        <option value="15m">15 minutes</option>
+                        <option value="30m">30 minutes</option>
+                        <option value="1h">1 hour</option>
+                        <option value="8h">8 hours</option>
+                        <option value="24h">24 hours</option>
+                        <option value="48h" selected>48 hours</option>
+                    </select></div>
+                    <div class="form-group">
+                        <button id="enablealerts" type="button" class="btn btn-success">Enable Email / Text Alerts</button>
+                        <button id="disablealerts" type="button" class="btn btn-warning">Disable Email / Text Alerts</button>
+                    </div>
+                    <div class="form-group">
+                        <button id="enablesound" type="button" class="btn btn-success">Enable Sounds</button>
+                        <button id="disablesound" type="button" class="btn btn-warning">Disable Sounds</button>
+                    </div>
+                </form>
               </div>
             </div><!-- /.modal-content -->
           </div><!-- /.modal-dialog -->
@@ -212,6 +220,8 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
             </div><!-- /.modal-content -->
           </div><!-- /.modal-dialog -->
         </div><!-- /.modal -->
+
+        <audio id="sfxbeep" src="/sounds/beep.mp3" preload="auto" />
     </div>
 
     <div id="iconPreload" class="hidden"></div>
