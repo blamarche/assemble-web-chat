@@ -276,35 +276,43 @@ func (svc *Service) SendAlert(toaddr, subject, message string) {
 		conn, err := tls.Dial("tcp", servername, tlsconfig)
 		if err != nil {
 			log.Println("smtperr", err)
+			return
 		}
 		c, err := smtp.NewClient(conn, host)
 		if err != nil {
 			log.Println("smtperr", err)
+			return
 		}
 
 		// Auth
 		if err = c.Auth(auth); err != nil {
 			log.Println("smtperr", err)
+			return
 		}
 		// To && From
 		if err = c.Mail(from.Address); err != nil {
 			log.Println("smtperr", err)
+			return
 		}
 		if err = c.Rcpt(to.Address); err != nil {
 			log.Println("smtperr", err)
+			return
 		}
 		// Data
 		w, err := c.Data()
 		if err != nil {
 			log.Println("smtperr", err)
+			return
 		}
 		_, err = w.Write([]byte(message))
 		if err != nil {
 			log.Println("smtperr", err)
+			return
 		}
 		err = w.Close()
 		if err != nil {
 			log.Println("smtperr", err)
+			return
 		}
 		c.Quit()
 	}
