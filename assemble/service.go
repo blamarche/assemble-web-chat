@@ -118,21 +118,25 @@ func (svc *Service) alertSender() {
 	for {
 		for _, v := range svc.Rooms {
 			if len(v.Messages) > 0 {
-				lastmsgstamp := v.Messages[len(v.Messages)-1].Path("time").Data().(int64)
+				laststampdata := v.Messages[len(v.Messages)-1].Path("time").Data()
+				if laststampdata != nil {
+					lastmsgstamp := laststampdata.(int64)
 
-				for uid := range v.MemberUIDs {
-					_, isonline := svc.OnlineUsers[uid]
-					if !isonline {
-						alertaddr := svc.Users[uid].Token.Path("alertaddress").Data()
-						if alertaddr != nil &&
-							svc.Users[uid].AlertsEnabled &&
-							lastmsgstamp > svc.Users[uid].LastAlert.Unix() &&
-							lastmsgstamp > svc.Users[uid].LastAct.Unix() {
+					for uid := range v.MemberUIDs {
+						_, isonline := svc.OnlineUsers[uid]
+						_, isuser := svc.Users[uid]
+						if isuser && !isonline {
+							alertaddr := svc.Users[uid].Token.Path("alertaddress").Data()
+							if alertaddr != nil &&
+								svc.Users[uid].AlertsEnabled &&
+								lastmsgstamp > svc.Users[uid].LastAlert.Unix() &&
+								lastmsgstamp > svc.Users[uid].LastAct.Unix() {
 
-							diff := time.Now().Sub(svc.Users[uid].LastAlert)
-							if diff > wait {
-								svc.Users[uid].LastAlert = time.Now()
-								svc.SendAlert(alertaddr.(string), "Assemble", "New messages in "+v.FriendlyName)
+								diff := time.Now().Sub(svc.Users[uid].LastAlert)
+								if diff > wait {
+									svc.Users[uid].LastAlert = time.Now()
+									svc.SendAlert(alertaddr.(string), "Assemble", "New messages in "+v.FriendlyName)
+								}
 							}
 						}
 					}
@@ -502,12 +506,14 @@ func (svc *Service) ValidateUserToken(so socketio.Socket, msg string) (string, e
 
 	_, ok := svc.Users[uid]
 	if !ok {
-		svc.Users[uid] = &User{}
-		svc.Users[uid].LastAlert = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
-		svc.Users[uid].LastAct = time.Now()
-		svc.Users[uid].Token = token
-		svc.Users[uid].AlertsEnabled = true
-		cleanToken(svc.Users[uid].Token)
+		u := &User{}
+		u.LastAlert = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+		u.LastAct = time.Now()
+		u.Token = token
+		u.AlertsEnabled = true
+		cleanToken(u.Token)
+		svc.Users[uid] = u
+
 		if so != nil {
 			svc.AddToRoom(so, uid, "lobby")
 		} else {
