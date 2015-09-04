@@ -22,13 +22,13 @@ Assemble is a GPLv3, database-less, full featured html chat system meant to be q
 * Text message / email notifications
 * Smilies
 * Auto-embed video links
+* Avatar generator
 
 ## Yet To Be Implemented
-* Ability to change info in user token but keep UID/PrivID and get updated login url back
+* Direct messages to offline users
 * Thumbs up / down smiley
 * Validation / error proofing
 * Update page title when new messages and not focused. When focused, reset back
-* Avatar generator
 * Client-side addition of custom "emoticons/stickers"
 * User token 'sharing' to other user-owned devices once signed in
 * Moderation process (ie /kick for the creator)

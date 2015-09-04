@@ -21,6 +21,13 @@ form.msg .btn { padding: 3px; height:36px !important; width:100%; overflow:hidde
 form.msg .glyphicon { margin-left: -2px; }
 form.msg .glyphicon img { width: 20px; margin-top: -4px; }
 #imgup { padding: 3px; height:36px !important; width:100%; overflow:hidden; }
+#imgupFile {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    opacity: 0;
+    cursor: pointer;
+}
 
 #messages { list-style-type: none; margin: 0; padding: 0; margin-bottom: 50px; padding-left: 135px;}
 #messages li { padding: 5px 10px; clear:both; line-height: 18px; border-left: 5px solid #d4d4d4; }
@@ -61,6 +68,7 @@ form.msg .glyphicon img { width: 20px; margin-top: -4px; }
 }
 #messages li a.onlineuser.offline {
     background: #777;
+    font-weight: normal;
 }
 #messages li .userprofilelink { cursor: pointer; }
 #messages li a.autolink {}
@@ -79,6 +87,13 @@ form.msg .glyphicon img { width: 20px; margin-top: -4px; }
         margin-top: 3px;
         line-height: normal;
     }
+
+#updateprofilebody iframe {
+    width: 100%;
+    overflow: auto;
+    height: 400px;
+    border: none;
+}
 
 #iconselect .modal-body { text-align: center; }
 #iconselect .modal-body img {

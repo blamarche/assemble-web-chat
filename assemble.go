@@ -120,14 +120,18 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// signupHandler controls the signup and user profile update forms
 func signupHandler(w http.ResponseWriter, r *http.Request) {
 	//TODO Validation
 	if strings.ToUpper(r.Method) == "POST" {
 		invite, ok := service.Invites[r.FormValue("invite")]
+		tokenenc := r.FormValue("token")
+
+		var token *gabs.Container
 
 		if ok {
 			delete(service.Invites, r.FormValue("invite"))
-			token, _ := assemble.CreateNewUserToken(
+			token, _ = assemble.CreateNewUserToken(
 				r.FormValue("nick"),
 				r.FormValue("name"),
 				r.FormValue("email"),
@@ -136,13 +140,28 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 				r.FormValue("desc"),
 				r.FormValue("avatar"),
 				r.FormValue("alertaddress"))
+		} else if tokenenc != "" {
+			uid, tokerr := service.ValidateUserToken(nil, tokenenc)
+			if tokerr == nil {
+				privid := service.Users[uid].Token.Path("privid").Data().(string)
+				token, _ = assemble.CreateUpdatedUserToken(
+					r.FormValue("nick"),
+					r.FormValue("name"),
+					r.FormValue("email"),
+					r.FormValue("phone"),
+					r.FormValue("url"),
+					r.FormValue("desc"),
+					r.FormValue("avatar"),
+					r.FormValue("alertaddress"),
+					uid, privid)
 
-			/*
-				service.Users[token.Path("uid").Data().(string)] = &assemble.User{}
-				service.Users[token.Path("uid").Data().(string)].LastAlert = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
-				service.Users[token.Path("uid").Data().(string)].LastAct = time.Now()
-				service.Users[token.Path("uid").Data().(string)].Token = token
-			*/
+				log.Println(uid, "updated user token")
+			} else {
+				tokenenc = ""
+			}
+		}
+
+		if ok || tokenenc != "" {
 
 			competok := utils.Compress([]byte(token.String()))
 			etok, _ := utils.Encrypt(service.UserKey, competok.Bytes())
@@ -151,12 +170,16 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 
 			//TODO use templates
 			fmt.Fprintf(w, `<html>`)
-			fmt.Fprintf(w, `<strong>A message from your invite: </strong>`+invite+`<br><br>`)
+			if ok {
+				fmt.Fprintf(w, `<strong>A message from your invite: </strong>`+invite+`<br><br>`)
+			} else {
+				fmt.Fprintf(w, `<strong>Delete your old login bookmark and close the window or you will still be using the old profile!</strong><br><br>`)
+			}
 			fmt.Fprintf(w, "Token (KEEP THIS SOMEWHERE SAFE OR SAVE THE LOGIN LINK): <br><textarea rows='10' cols='60'>%s</textarea><br><br>", base64.StdEncoding.EncodeToString(etok))
-			fmt.Fprintf(w, "<a href='/#%s'>Assemble Chat Login</a> BOOKMARK THIS! <strong>DO NOT SHARE THIS LINK</strong>", base64.StdEncoding.EncodeToString(etok))
+			fmt.Fprintf(w, "<a href='/#%s' target='_blank'>Assemble Chat Login</a> BOOKMARK THIS! <strong>DO NOT SHARE THIS LINK</strong>", base64.StdEncoding.EncodeToString(etok))
 			fmt.Fprintf(w, `</html>`)
 		} else {
-			fmt.Fprintf(w, `Invalid Invite ID`)
+			fmt.Fprintf(w, `Invalid Invite ID or Token`)
 		}
 	} else {
 		fc, _ := ioutil.ReadFile("./static/signup.html")
@@ -220,8 +243,7 @@ func socketHandlers(so socketio.Socket) {
 		so.Emit("roomlist", service.CreateRoomList())
 
 		//add user to online status
-		ou := assemble.OnlineUser{So: &so, LastPing: time.Now()}
-		service.OnlineUsers[uid] = &ou
+		service.SetUserOnline(uid, so)
 		//since the user end sup joining lobby anyway, no need to broadcast any global online status alert
 
 		so.On("disconnection", func() {
@@ -319,6 +341,8 @@ func socketHandlers(so socketio.Socket) {
 		_, ok2 := service.OnlineUsers[uid]
 		if ok2 {
 			service.OnlineUsers[uid].LastPing = time.Now()
+		} else {
+			service.SetUserOnline(uid, so)
 		}
 	}))
 
@@ -506,6 +530,12 @@ func socketHandlers(so socketio.Socket) {
 	}))
 
 	so.On("chatm", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
+		//add to online status if offline
+		_, isonline := service.OnlineUsers[uid]
+		if !isonline {
+			service.SetUserOnline(uid, so)
+		}
+
 		//TODO message size limit enforcement
 		g.SetP("", "t")    //clear full token
 		g.SetP(uid, "uid") //set uid and user info

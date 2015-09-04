@@ -22,13 +22,54 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
     <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="/signup-login.css" rel="stylesheet">
     <script src="/jquery-1.11.1.js"></script>
+    <script src="/dropzone.js"></script>
+    <script>
+    Dropzone.autoDiscover = false;
+    </script>
     <script src="/bootstrap/js/bootstrap.min.js"></script>
     <script>
         $(document).ready(function() {
             var key = window.location.hash;
             if (key!="") {
-                $("#invite").val(key.substring(1));
+                if (key.substring(0,7)=="#token=") {
+                    $('body').addClass('updateprofile');
+                    $("#invitegroup").hide();
+                    $("h3").text("Update Profile");
+                    $("#token").val(key.substring(7));
+                } else {
+                    $("#invite").val(key.substring(1));
+                }
             }
+
+            var myDropZone = new Dropzone("#imgupFile",{
+            //$("#imgupFile").dropzone({
+                url:"/signup",
+                paramName: "file", // The name that will be used to transfer the file
+                maxFilesize: 0.5, // MB
+                previewsContainer: $("#preview")[0],
+                clickable: true,
+                maxFiles:1,
+                acceptedFiles: "image/*",
+                autoProcessQueue: false,
+                thumbnail: function(file, imguri) {
+
+
+                    var canvas, context, image, imageData;
+                    canvas = document.createElement('canvas');
+                    canvas.width = 64;
+                    canvas.height = 64;
+                    context = canvas.getContext('2d');
+                    image = $("#avatarimg")[0];
+                    image.addEventListener('load', function(){
+                        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                        imageData = canvas.toDataURL();
+                        $("#avatar").val(imageData);
+                    }, false);
+                    image.src = imguri;
+
+                    //$("#avatarimg").attr('src',imguri);
+                }
+            });
         });
     </script>
     <style>
@@ -46,7 +87,8 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
       <div class="col-md-4">
       <h3>Assemble Signup</h3>
       <form action="/signup/" name="signup" method="POST">
-          <div class="form-group"><input id="invite" class="form-control" name="invite" autocomplete="off" placeholder="Invite ID" />
+          <input id="token" name="token" type="hidden"></input>
+          <div id="invitegroup" class="form-group"><input id="invite" class="form-control" name="invite" autocomplete="off" placeholder="Invite ID" />
               <span class="help-block">( ie: a1b2c3d4-e5f6-a1b2-c3d4-e5f6a1b2c3d4 )</span>
           </div>
           <div class="form-group"><input class="form-control" name="nick" autocomplete="off" placeholder="Nickname"/></div>
@@ -55,14 +97,15 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
           <div class="form-group"><input class="form-control" name="phone" autocomplete="off" placeholder="Phone Number (optional)"/></div>
           <div class="form-group"><input class="form-control" name="url" autocomplete="off" placeholder="Website (optional)"/></div>
           <div class="form-group"><textarea class="form-control" name="desc" autocomplete="off" placeholder="Description (optional)"></textarea></div>
-          <div class="form-group"><input class="form-control" name="avatar" autocomplete="off" placeholder="Avatar Image DataUri (optional)"/>
+          <div class="form-group"><input type="hidden" id="avatar" class="form-control" name="avatar" autocomplete="off" placeholder="Avatar Image DataUri (optional)"/>
               <span class="help-block" style="text-align:center;">
-                  <a href="http://dataurl.net/#dataurlmaker" target="_blank">Avatar generator. Keep it small! 64x64px</a>
+                  <a id="imgupFile">Drag your avatar image here.<br>
+                  <img id="avatarimg"></img></a>
               </span>
           </div>
           <div class="form-group"><input class="form-control" name="alertaddress" autocomplete="off" placeholder="Alert Email/Text Address (optional)"/>
               <span class="help-block">
-                  To get text message alerts, enter your phone providers gateway email. See more at <a href="#" data-toggle="modal" data-target="#smsgateways">Provider List</a>
+                  To get text message alerts, enter your phone providers gateway email. <a href="#" data-toggle="modal" data-target="#smsgateways">Provider List</a>
               </span>
           </div>
 
@@ -109,6 +152,6 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
           </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
       </div><!-- /.modal -->
-
+      <div id="preview" style="display:none;"></div>
   </body>
 </html>

@@ -70,7 +70,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
               <div class="col-xs-1">
               <span id="uploadContainer">
                   <button id="imgup" class="btn btn-primary"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></button>
-                  <input type="" id="imgupFile" class="hidden"></input>
+                  <input type="" id="imgupFile" class=""></input>
               </span>
               </div>
 
@@ -159,6 +159,9 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
                         <button id="enablesound" type="button" class="btn btn-success">Enable Sounds</button>
                         <button id="disablesound" type="button" class="btn btn-warning">Disable Sounds</button>
                     </div>
+                    <div class="form-group">
+                        <button id="btnupdateprofile" type="button" class="btn btn-primary" data-dismiss="modal">Update Profile (Nickname, Avatar, etc...)</button>
+                    </div>
                 </form>
               </div>
             </div><!-- /.modal-content -->
@@ -216,6 +219,19 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
               </div>
               <div class="modal-body">
                   <button id="btndeletemessage" data-dismiss="modal" class="btn btn-danger">Delete Message</button>
+              </div>
+            </div><!-- /.modal-content -->
+          </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
+
+        <div id="updateprofile" class="modal fade">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              </div>
+              <div id="updateprofilebody" class="modal-body">
+
               </div>
             </div><!-- /.modal-content -->
           </div><!-- /.modal-dialog -->

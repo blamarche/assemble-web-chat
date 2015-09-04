@@ -116,8 +116,8 @@ func (svc *Service) alertSender() {
 
 	d, _ := time.ParseDuration("5s")
 	for {
-		for k, v := range svc.Rooms {
-			if k != "lobby" && len(v.Messages) > 0 {
+		for _, v := range svc.Rooms {
+			if len(v.Messages) > 0 {
 				lastmsgstamp := v.Messages[len(v.Messages)-1].Path("time").Data().(int64)
 
 				for uid := range v.MemberUIDs {
@@ -210,6 +210,11 @@ func (svc *Service) expireHistory() {
 	}
 }
 
+func (svc *Service) SetUserOnline(uid string, so socketio.Socket) {
+	ou := OnlineUser{So: &so, LastPing: time.Now()}
+	svc.OnlineUsers[uid] = &ou
+}
+
 // CreateRoom adds a room to the services list
 func (svc *Service) CreateRoom(fname, roomid string, isprivate bool, creatoruid string, maxexptime time.Duration, minexptime time.Duration, avatar string, maxhistorylen int) *Room {
 	r := Room{}
@@ -225,17 +230,11 @@ func (svc *Service) CreateRoom(fname, roomid string, isprivate bool, creatoruid 
 	r.Messages = make([]*gabs.Container, 0)
 	r.MemberUIDs = make(map[string]string, 10)
 	r.InvitedUIDs = make(map[string]string, 10)
-	/*
-		if r.CreatorUID != "" {
-			r.MemberUIDs[r.CreatorUID] = r.CreatorUID //ineffecient, perhaps a pointer to the actual gabs object
-		}
-	*/
+
 	svc.Rooms[roomid] = &r
 
 	return &r
 }
-
-//TODO STILL NEEDS REFACTORING
 
 func (svc *Service) SendAlert(toaddr, subject, message string) {
 	if svc.Cfg.SMTP.Enabled {
@@ -536,10 +535,7 @@ func cleanToken(token *gabs.Container) {
 	token.SetP(html.EscapeString(token.Path("avatar").Data().(string)), "avatar")
 }
 
-func CreateNewUserToken(nick string, name string, email string, phone string, url string, desc string, avatar string, alertaddress string) (*gabs.Container, error) {
-
-	uid := uuid.NewV4().String()
-	privid := uuid.NewV4().String()
+func CreateUpdatedUserToken(nick, name, email, phone, url, desc, avatar, alertaddress, uid, privid string) (*gabs.Container, error) {
 	token, err := gabs.ParseJSON([]byte(`{
 		"uid":null, "privid":null, "nick":null,
 		"name":null, "email":null, "phone":null,
@@ -559,4 +555,10 @@ func CreateNewUserToken(nick string, name string, email string, phone string, ur
 	token.SetP(alertaddress, "alertaddress")
 
 	return token, err
+}
+
+func CreateNewUserToken(nick, name, email, phone, url, desc, avatar, alertaddress string) (*gabs.Container, error) {
+	uid := uuid.NewV4().String()
+	privid := uuid.NewV4().String()
+	return CreateUpdatedUserToken(nick, name, email, phone, url, desc, avatar, alertaddress, uid, privid)
 }

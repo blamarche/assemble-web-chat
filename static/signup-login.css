@@ -1,6 +1,9 @@
 body {
     padding: 60px 0;
 }
+body.updateprofile {
+    padding: 0 0;
+}
 
 .footertext {
     color:black;
@@ -18,4 +21,14 @@ body {
 .help-block a {
     color:#0e7;
     text-align: center;
+}
+
+#imgupFile {
+    cursor: pointer;
+}
+
+#avatarimg {
+    width:64px;
+    height:64px;
+    background:white;
 }

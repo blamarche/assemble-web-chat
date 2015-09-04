@@ -37,7 +37,7 @@ if (storageAvailable('localStorage')) {
 
 //socket events
 socket.on('connect', auth);
-socket.on('reconnect', auth);
+//socket.on('reconnect', auth);
 function auth(d) {
     rooms={};
     roomnames={};
@@ -156,6 +156,11 @@ $(document).ready(function(){
         enableSound = false;
         if (storageAvailable('localStorage'))
             localStorage.setItem("enableSound", enableSound);
+    });
+
+    $('#btnupdateprofile').on('click', function(e) {
+        $('#updateprofilebody').html('<iframe src="/signup/#token='+token+'"></iframe>');
+        $('#updateprofile').modal();
     });
 
     $("#messages").on('click', '.userprofilelink', function(e) {
@@ -459,6 +464,7 @@ socket.on('auth_error', function(d){
     appendSystemMessage("Error: "+d,5000);
     if (d=="Invalid Token") {
         appendSystemMessage("<a class='signup' href='/signup'>Sign up with your Invite Code</a>",0);
+        $(".connecting").addClass("hidden");
     }
     $("#m").prop('disabled', false);
 });
