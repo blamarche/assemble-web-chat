@@ -260,11 +260,14 @@ $('form').submit(function(){
     }
     return false;
 });
-
+var makeline = true;
 $("#m").on('keydown', function(ev) {
     if (ev.keyCode==13) {
-        if (ev.ctrlKey) {
-            $("#m").val($("#m").val()+"\n");
+        if (ev.shiftKey) {
+            if(makeline){
+                $("#m").val($("#m").val()+"\n");
+                makeline = false;
+            }
         } else {
             $('form').submit();
             ev.preventDefault();
@@ -273,6 +276,11 @@ $("#m").on('keydown', function(ev) {
     }
 });
 
+$("#m").on('keyup',function(ev){
+    if (ev.keyCode == 13){
+        makeLine=true;
+    }
+});
 //menu buttons.
 $("#btnroomlist").on('click', function() {
     socket.emit("roomlist",JSON.stringify({"t": token}));
