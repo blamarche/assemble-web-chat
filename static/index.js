@@ -21,6 +21,7 @@ var roomnames = {};
 var cur_room = "";
 var cur_dur = "48h";
 var token = window.location.hash.substring(1);
+var newMsgCount=0;
 var switchOnJoin = true;
 var hasJoined = false;
 var enableSound = true;
@@ -127,6 +128,15 @@ $(document).ready(function(){
         //TODO bandwidth optimize this! probably no need to send a full on token each time.
     }
 
+    resetTitle();
+    function resetTitle() {
+        if (document.hasFocus() && newMsgCount>0) {
+            document.title="Assemble Chat";
+            newMsgCount=0;
+        }
+        setTimeout(resetTitle, 1500);
+    }
+
     timeCalc();
     function timeCalc() {
         $("span.time").each(function(index, el){
@@ -175,6 +185,15 @@ $(document).ready(function(){
     $("#btndeletemessage").on('click', function(e) {
         var msgid = $("#btndeletemessage").attr("data-msgid");
         requestDeleteMessage(msgid);
+    });
+
+    $("#btnleaveroom").on('click', function(e) {
+        var rm = $("#btnleaveroom").attr("data-room");
+        socket.emit("leave", JSON.stringify({"t": token, "room": rm}));
+    });
+    $("#btnhideroom").on('click', function(e) {
+        var rm = $("#btnhideroom").attr("data-room");
+        removeRoom(rm);
     });
 
     $("#createnewroom").on('click', function(e) {
@@ -319,6 +338,10 @@ socket.on('chatm', function(d){
     if (!document.hasFocus() && enableSound) {
         $("#sfxbeep")[0].play();
     }
+    if (!document.hasFocus()) {
+        newMsgCount++;
+        document.title = "("+newMsgCount+") "+rooms[d.room].friendlyname;
+    }
 
     try {
         if (Notification.permission==="granted" && (cur_room!=d.room || !document.hasFocus()) && d.m.indexOf("data:image/")!=0) {
@@ -342,6 +365,10 @@ socket.on('setalerts', function(msg) {
 });
 
 socket.on('leave', function(room) {
+    removeRoom(room);
+});
+
+function removeRoom(room) {
     delete rooms[room];
     for (var n in roomnames) {
         if (roomnames[n]==room) {
@@ -350,7 +377,7 @@ socket.on('leave', function(room) {
         }
     }
     $("#sidebar li[data-room='"+room+"']").remove();
-});
+}
 
 socket.on('inviteusertoroom', function(d) {
     var d=JSON.parse(d);
@@ -514,7 +541,11 @@ function updateSidebar() {
                 })
                 .on('contextmenu', function(ev) {
                     var rm = $(ev.currentTarget).attr("data-room");
-                    socket.emit("leave", JSON.stringify({"t": token, "room": rm}));
+                    //socket.emit("leave", JSON.stringify({"t": token, "room": rm}));
+                    $("#btnleaveroom").attr("data-room", rm);
+                    $("#btnhideroom").attr("data-room", rm);
+                    $("#leaveroommodal").modal();
+                    return false;
                 })
             );
         }
@@ -797,14 +828,13 @@ var icon_lib = {
     "O.o":"icon_confused.svg",
     "O_o":"icon_confused.svg",
     "o_O":"icon_confused.svg",
-    "8)":"icon_cool.svg",
     "8-)":"icon_cool.svg",
     ";(":"icon_cry.svg",
     ":'(":"icon_cry.svg",
     ";-(":"icon_cry.svg",
     "(important)":"icon_important.svg",
     ":*":"icon_kiss.svg",
-    "XD":"icon_lol.svg",
+    "X-D":"icon_lol.svg",
     ":|":"icon_neutral.svg",
     ":-|":"icon_neutral.svg",
     ":(":"icon_sad.svg",
@@ -837,4 +867,6 @@ var icon_lib = {
     "(surprised)":"icon_surprised.svg",
     "(tongue)":"icon_tongue.svg",
     "(wink)":"icon_wink.svg",
+    "(y)":"icon_thumbsup.svg",
+    "(n)":"icon_thumbsdown.svg",
 };

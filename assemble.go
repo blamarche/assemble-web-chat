@@ -288,9 +288,7 @@ func socketHandlers(so socketio.Socket) {
 						caninvite = true
 					} else {
 						_, ismember := r.MemberUIDs[uid]
-						if !ismember {
-							caninvite = false
-						}
+						caninvite = ismember
 					}
 
 					if !caninvite {
@@ -412,7 +410,7 @@ func socketHandlers(so socketio.Socket) {
 		_, ok := service.Rooms[roomid]
 		_, ok2 := service.Rooms[roomid2]
 		if !ok && !ok2 {
-			service.CreateRoom(service.Users[uid].Token.Path("nick").Data().(string)+" / "+service.Users[muid].Token.Path("nick").Data().(string), roomid, true, uid, service.DefMaxExp, service.DefMinExp, "", 100)
+			service.CreateRoom(service.Users[uid].Token.Path("nick").Data().(string)+" / "+service.Users[muid].Token.Path("nick").Data().(string), roomid, true, uid, service.DefMaxExp, service.DefMinExp, "", 500)
 		} else if !ok && ok2 {
 			roomid = roomid2
 		}
@@ -450,7 +448,7 @@ func socketHandlers(so socketio.Socket) {
 			}
 		}
 
-		service.CreateRoom(name, roomid, isprivate, uid, maxdur, mindur, "", 100)
+		service.CreateRoom(name, roomid, isprivate, uid, maxdur, mindur, "", 500)
 		service.AddToRoom(so, uid, roomid)
 	}))
 

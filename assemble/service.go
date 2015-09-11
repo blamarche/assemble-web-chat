@@ -56,11 +56,11 @@ func NewService(cfg *config.Config, userkey []byte) *Service {
 	s := Service{}
 	s.Cfg = cfg
 
-	s.Rooms = make(map[string]*Room, 100)
-	s.Users = make(map[string]*User, 100)
-	s.OnlineUsers = make(map[string]*OnlineUser, 100)
-	s.Banlist = make(map[string]string, 100)
-	s.Invites = make(map[string]string, 100)
+	s.Rooms = make(map[string]*Room, 200)
+	s.Users = make(map[string]*User, 200)
+	s.OnlineUsers = make(map[string]*OnlineUser, 200)
+	s.Banlist = make(map[string]string, 200)
+	s.Invites = make(map[string]string, 200)
 
 	s.UserKey = userkey
 
@@ -76,7 +76,7 @@ func NewService(cfg *config.Config, userkey []byte) *Service {
 	}
 	s.DefMinExp = min
 
-	s.CreateRoom("Lobby", "lobby", false, "", s.DefMaxExp, s.DefMinExp, "", 100)
+	s.CreateRoom("Lobby", "lobby", false, "", s.DefMaxExp, s.DefMinExp, "", 1000)
 
 	server, err := socketio.NewServer(nil)
 	if err != nil {

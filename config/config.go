@@ -53,7 +53,7 @@ func DefaultConfig() (*Config, error) {
         "defaultmaxexp": "48h",
         "defaultminexp": "30s",
         "usertimeout": "300s",
-		"lastalertwait": "30m"
+		"lastalertwait": "120m"
 	}`
 
 	// Unmarshal the default json string into an interface.

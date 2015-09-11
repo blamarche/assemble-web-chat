@@ -29,6 +29,16 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
     <script src="/bootstrap/js/bootstrap.min.js"></script>
     <script>
         $(document).ready(function() {
+            $('form').submit(function(){
+                var nick = $("#nick").val();
+                if (nick.length < 2) {
+                    alert("Nickname must be at least 2 characters long");
+                    return false;
+                }
+
+                return true;
+            });
+
             var key = window.location.hash;
             if (key!="") {
                 if (key.substring(0,7)=="#token=") {
@@ -91,7 +101,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
           <div id="invitegroup" class="form-group"><input id="invite" class="form-control" name="invite" autocomplete="off" placeholder="Invite ID" />
               <span class="help-block">( ie: a1b2c3d4-e5f6-a1b2-c3d4-e5f6a1b2c3d4 )</span>
           </div>
-          <div class="form-group"><input class="form-control" name="nick" autocomplete="off" placeholder="Nickname"/></div>
+          <div class="form-group"><input class="form-control" id="nick" name="nick" autocomplete="off" placeholder="Nickname"/></div>
           <div class="form-group"><input class="form-control" name="name" autocomplete="off" placeholder="Your Name (optional)"/></div>
           <div class="form-group"><input class="form-control" name="email" autocomplete="off" placeholder="Email (optional)"/></div>
           <div class="form-group"><input class="form-control" name="phone" autocomplete="off" placeholder="Phone Number (optional)"/></div>
