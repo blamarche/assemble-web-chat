@@ -25,6 +25,7 @@ var newMsgCount=0;
 var switchOnJoin = true;
 var hasJoined = false;
 var enableSound = true;
+var smallImages = false;
 
 //load settings from local
 if (storageAvailable('localStorage')) {
@@ -32,6 +33,8 @@ if (storageAvailable('localStorage')) {
         enableSound = localStorage.getItem("enableSound") == "true";
     if (localStorage.getItem("cur_dur"))
         cur_dur = localStorage.getItem("cur_dur");
+    if (localStorage.getItem("smallImages"))
+        smallImages = localStorage.getItem("smallImages") == "true";
 } else {
     //console.log("No local storage");
 }
@@ -150,6 +153,7 @@ $(document).ready(function(){
         setTimeout(timeCalc, 60000);
     }
 
+    //alerts options
     $('#enablealerts').on('click', function(e) {
         socket.emit("setalerts", JSON.stringify({"t": token, "enabled": true}));
     });
@@ -157,6 +161,7 @@ $(document).ready(function(){
         socket.emit("setalerts", JSON.stringify({"t": token, "enabled": false}));
     });
 
+    //sound options
     $('#enablesound').on('click', function(e) {
         enableSound = true;
         if (storageAvailable('localStorage'))
@@ -168,11 +173,31 @@ $(document).ready(function(){
             localStorage.setItem("enableSound", enableSound);
     });
 
+    //image size options
+    $('#btnsmallimages').on('click', function(e) {
+        smallImages=true;
+        if (storageAvailable('localStorage'))
+            localStorage.setItem("smallImages", smallImages);
+        $("#messages .messagetext img").addClass("smallimage");
+        $("#messages .messagetext video").addClass("smallimage");
+        $("#messages .messagetext iframe").addClass("smallimage");
+    });
+    $('#btnlargeimages').on('click', function(e) {
+        smallImages=false;
+        if (storageAvailable('localStorage'))
+            localStorage.setItem("smallImages", smallImages);
+        $("#messages .messagetext img").removeClass("smallimage");
+        $("#messages .messagetext video").removeClass("smallimage");
+        $("#messages .messagetext iframe").removeClass("smallimage");
+    });
+
+    //update profile options
     $('#btnupdateprofile').on('click', function(e) {
         $('#updateprofilebody').html('<iframe src="/signup/#token='+token+'"></iframe>');
         $('#updateprofile').modal();
     });
 
+    //other buttons
     $("#messages").on('click', '.userprofilelink', function(e) {
         socket.emit("userinfo", JSON.stringify({"t": token, "uid": $(e.currentTarget).attr("data-uid")}));
     });
@@ -226,6 +251,23 @@ $(document).ready(function(){
         }
         return false;
     });
+
+    //shrink/enlarge images
+    $('#messages').on('click', '.messagetext img', imgtoggle);
+    $('#messages').on('contextmenu', '.messagetext img', imgtoggle);
+    $('#messages').on('click', '.messagetext iframe', imgtoggle);
+    $('#messages').on('contextmenu', '.messagetext iframe', imgtoggle);
+    $('#messages').on('contextmenu', '.messagetext video', imgtoggle); //firefox bug causes issues clicking on a control
+    function imgtoggle(ev) {
+        if (!$(ev.currentTarget).hasClass("smiley") && !$(ev.currentTarget).hasClass("avatar")) {
+            if ($(ev.currentTarget).hasClass("smallimage")) {
+                $(ev.currentTarget).removeClass("smallimage");
+            } else {
+                $(ev.currentTarget).addClass("smallimage");
+            }
+        }
+        return false;
+    }
 
     $("#iconselect").on('click', '.modal-body img', function(ev){
         var ic=$(ev.currentTarget).attr("title");
@@ -589,10 +631,11 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
     var tmp = $('<div>')
     tmp.text(m);
     m=tmp.text();
-    //TODO needs escaping
+
+    var small = smallImages ? " smallimage" : "";
 
     if (m.indexOf("data:image/")==0) {
-        m = "<img class='autolink upload' src='"+m+"'></img>";
+        m = "<img class='autolink upload"+small+"' src='"+m+"'></img>";
     } else {
         m = Autolinker.link(m, {
             stripPrefix: false,
@@ -609,18 +652,17 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
                              match.getUrl().indexOf( '.png' ) !== -1 ||
                              match.getUrl().indexOf( '.gif' ) !== -1  )
                         {
-                            return "<a href='"+href+"' target='_blank'>"+href+"</a><br><img src='"+href+"' class='autolink'></img>";
+                            return "<a href='"+href+"' target='_blank'>"+href+"</a><br><img src='"+href+"' class='autolink"+small+"'></img>";
                         }
                         else if ( match.getUrl().indexOf( '.mp4' ) !== -1 ||
                              match.getUrl().indexOf( '.ogg' ) !== -1 ||
                              match.getUrl().indexOf( '.webm' ) !== -1 )
                         {
-                            return "<a href='"+href+"' target='_blank'>"+href+"</a><br><video controls class='autolink'><source src='"+href+"'></video>";
+                            return "<a href='"+href+"' target='_blank'>"+href+"</a><br><video controls class='autolink"+small+"'+small+''><source src='"+href+"'></video>";
                         }
                         else if ( match.getUrl().indexOf('youtube.com/watch?v=') !== -1 )
                         {
-                            //<iframe width="560" height="315" src="https://www.youtube.com/embed/U3pXNt7zqIU" frameborder="0" allowfullscreen></iframe>
-                            var frame = '<iframe class="autolink" height="315" src="'+match.getUrl().replace('youtube.com/watch?v=', 'youtube.com/embed/')+'" frameborder="0" allowfullscreen></iframe>';
+                            var frame = '<iframe class="autolink'+small+'" height="315" src="'+match.getUrl().replace('youtube.com/watch?v=', 'youtube.com/embed/')+'" frameborder="0" allowfullscreen></iframe>';
                             return frame;
                         }
                         break;
@@ -651,25 +693,27 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
         avatarimg = "<span class='glyphicon glyphicon-user avatar'></span>";
     }
 
-    $('#messages').append($('<li>')
+    var msgli = $('<li>')
         .html("<div class='useravatar'>"+avatarimg+"</div><div class='messagecontainer'><a title='"+uid+"' data-uid='"+uid+"' class='userprofilelink nick'>"+nick+"</a> <span class='time' data-time='"+rawtime+"'>"+time+"</span> <br><span class='messagetext'>"+m+"</span>")
         .attr("data-msgid", id)
         .attr("data-room", room)
         //.attr("title",id)
         .addClass("chatmsg")
-        .addClass(hide)
-        .on("contextmenu",function(ev) {
-            var msgid = $(ev.currentTarget).attr("data-msgid")
-            $("#btndeletemessage").attr("data-msgid", msgid);
-            $("#deletemessagemodal").modal();
-            return false;
-        })
-        /*
-        .on("click", function(ev) {
-            console.log("Show user info"); //TODO
-        })
-        */
-    );
+        .addClass(hide);
+
+    msgli.children('.useravatar').on("contextmenu", delfunc);
+    msgli.find('a').on("contextmenu", delfunc);
+    function delfunc(ev) {
+        var msgid = $(ev.currentTarget).parent().attr("data-msgid");
+        if (typeof msgid=="undefined") {
+            msgid = $(ev.currentTarget).parent().parent().attr("data-msgid");    
+        }
+        $("#btndeletemessage").attr("data-msgid", msgid);
+        $("#deletemessagemodal").modal();
+        return false;
+    }
+
+    $('#messages').append(msgli);
 }
 
 function processIcons(m) {
