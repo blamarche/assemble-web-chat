@@ -661,7 +661,10 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
     var small = smallImages ? " smallimage" : "";
 
     if (m.indexOf("data:image/")==0) {
-        m = "<img class='autolink upload"+small+"' src='"+m+"'></img>";
+        if (noImages)
+            m = "<a class='autolink upload' href='"+m+"'>Image Uploaded</a>";
+        else
+            m = "<img class='autolink upload"+small+"' src='"+m+"'></img>";
     } else {
         m = Autolinker.link(m, {
             stripPrefix: false,
@@ -678,17 +681,34 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
                              match.getUrl().indexOf( '.png' ) !== -1 ||
                              match.getUrl().indexOf( '.gif' ) !== -1  )
                         {
+                            if (noImages)
+                                return "<a href='"+href+"' target='_blank'>"+href+"</a>";
+
                             return "<a href='"+href+"' target='_blank'>"+href+"</a><br><img src='"+href+"' class='autolink"+small+"'></img>";
                         }
                         else if ( match.getUrl().indexOf( '.mp4' ) !== -1 ||
                              match.getUrl().indexOf( '.ogg' ) !== -1 ||
                              match.getUrl().indexOf( '.webm' ) !== -1 )
                         {
+                            if (noImages)
+                                return "<a href='"+href+"' target='_blank'>"+href+"</a>";
+
                             return "<a href='"+href+"' target='_blank'>"+href+"</a><br><video controls class='autolink"+small+"'+small+''><source src='"+href+"'></video>";
                         }
                         else if ( match.getUrl().indexOf('youtube.com/watch?v=') !== -1 )
                         {
+                            if (noImages)
+                                return "<a href='"+href+"' target='_blank'>"+href+"</a>";
+
                             var frame = '<iframe class="autolink'+small+'" height="315" src="'+match.getUrl().replace('youtube.com/watch?v=', 'youtube.com/embed/')+'" frameborder="0" allowfullscreen></iframe>';
+                            return frame;
+                        }
+                        else if ( match.getUrl().indexOf('youtu.be/') !== -1 )
+                        {
+                            if (noImages)
+                                return "<a href='"+href+"' target='_blank'>"+href+"</a>";
+
+                            var frame = '<iframe class="autolink'+small+'" height="315" src="'+match.getUrl().replace('youtu.be/', 'youtube.com/embed/')+'" frameborder="0" allowfullscreen></iframe>';
                             return frame;
                         }
                         break;
