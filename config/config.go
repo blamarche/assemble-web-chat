@@ -35,6 +35,7 @@ type Config struct {
 	DefaultMinExp string `json:"defaultminexp"` //30s
 	UserTimeout   string `json:"usertimeout"`   //300s
 	LastAlertWait string `json:"lastalertwait"` //30m - prevents sending too many alerts to offline users
+	MaxHistoryLen int    `json:"maxhistorylen"` //500 - # of messages to store per room max
 }
 
 // DefaultConfig returns a default configuration struct
@@ -53,7 +54,8 @@ func DefaultConfig() (*Config, error) {
         "defaultmaxexp": "48h",
         "defaultminexp": "30s",
         "usertimeout": "300s",
-		"lastalertwait": "120m"
+		"lastalertwait": "120m",
+		"maxhistorylen": 500
 	}`
 
 	// Unmarshal the default json string into an interface.

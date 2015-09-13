@@ -96,7 +96,7 @@ func main() {
 	if err != nil {
 		err = httpscerts.Generate("cert.pem", "key.pem", cfg.Host)
 		if err != nil {
-			log.Fatal("Error: Couldn't find or create create https certs.")
+			log.Fatal("Error: Couldn't find or create https certs.")
 		}
 	}
 
@@ -410,7 +410,7 @@ func socketHandlers(so socketio.Socket) {
 		_, ok := service.Rooms[roomid]
 		_, ok2 := service.Rooms[roomid2]
 		if !ok && !ok2 {
-			service.CreateRoom(service.Users[uid].Token.Path("nick").Data().(string)+" / "+service.Users[muid].Token.Path("nick").Data().(string), roomid, true, uid, service.DefMaxExp, service.DefMinExp, "", 500)
+			service.CreateRoom(service.Users[uid].Token.Path("nick").Data().(string)+" / "+service.Users[muid].Token.Path("nick").Data().(string), roomid, true, uid, service.DefMaxExp, service.DefMinExp, "", service.Cfg.MaxHistoryLen)
 		} else if !ok && ok2 {
 			roomid = roomid2
 		}
@@ -448,7 +448,7 @@ func socketHandlers(so socketio.Socket) {
 			}
 		}
 
-		service.CreateRoom(name, roomid, isprivate, uid, maxdur, mindur, "", 500)
+		service.CreateRoom(name, roomid, isprivate, uid, maxdur, mindur, "", service.Cfg.MaxHistoryLen)
 		service.AddToRoom(so, uid, roomid)
 	}))
 

@@ -26,6 +26,7 @@ var switchOnJoin = true;
 var hasJoined = false;
 var enableSound = true;
 var smallImages = false;
+var noImages = false;
 
 //load settings from local
 if (storageAvailable('localStorage')) {
@@ -35,6 +36,8 @@ if (storageAvailable('localStorage')) {
         cur_dur = localStorage.getItem("cur_dur");
     if (localStorage.getItem("smallImages"))
         smallImages = localStorage.getItem("smallImages") == "true";
+    if (localStorage.getItem("noImages"))
+        noImages = localStorage.getItem("noImages") == "true";
 } else {
     //console.log("No local storage");
 }
@@ -175,20 +178,35 @@ $(document).ready(function(){
 
     //image size options
     $('#btnsmallimages').on('click', function(e) {
+        noImages = false;
         smallImages=true;
-        if (storageAvailable('localStorage'))
+        if (storageAvailable('localStorage')) {
             localStorage.setItem("smallImages", smallImages);
+            localStorage.setItem("noImages", noImages);
+        }
         $("#messages .messagetext img").addClass("smallimage");
         $("#messages .messagetext video").addClass("smallimage");
         $("#messages .messagetext iframe").addClass("smallimage");
     });
     $('#btnlargeimages').on('click', function(e) {
+        noImages = false;
         smallImages=false;
-        if (storageAvailable('localStorage'))
+        if (storageAvailable('localStorage')) {
             localStorage.setItem("smallImages", smallImages);
+            localStorage.setItem("noImages", noImages);
+        }
         $("#messages .messagetext img").removeClass("smallimage");
         $("#messages .messagetext video").removeClass("smallimage");
         $("#messages .messagetext iframe").removeClass("smallimage");
+    });
+    $('#btnnoimages').on('click', function(e) {
+        noImages = true;
+        if (storageAvailable('localStorage')) {
+            localStorage.setItem("noImages", noImages);
+        }
+        $("#messages .messagetext img").hide();
+        $("#messages .messagetext video").hide();
+        $("#messages .messagetext iframe").hide();
     });
 
     //update profile options
@@ -558,7 +576,9 @@ socket.on('invitenewuser', function(d){
 socket.on('deletechatm', function(d){
     $("#messages li[data-msgid='"+d+"']").html("<i>Removed message</i>");
     setTimeout(function(){
-        $("#messages li[data-msgid='"+d+"']").slideUp(1000);
+        $("#messages li[data-msgid='"+d+"']").slideUp(1000, function() {
+            $("#messages li[data-msgid='"+d+"']").remove();
+        });
     }, 3000);
 });
 
@@ -623,6 +643,12 @@ function appendSystemMessage(msg, lifetimeMs, cssclass) {
 }
 
 function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
+    if (id!="") {
+        var msgelem = $("#messages li.chatmsg[data-msgid='"+id+"']");
+        if (msgelem.length > 0)
+            return;
+    }
+
     var hide = "";
     if (room!=cur_room) {
         hide="hidden";
@@ -706,7 +732,7 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
     function delfunc(ev) {
         var msgid = $(ev.currentTarget).parent().attr("data-msgid");
         if (typeof msgid=="undefined") {
-            msgid = $(ev.currentTarget).parent().parent().attr("data-msgid");    
+            msgid = $(ev.currentTarget).parent().parent().attr("data-msgid");
         }
         $("#btndeletemessage").attr("data-msgid", msgid);
         $("#deletemessagemodal").modal();

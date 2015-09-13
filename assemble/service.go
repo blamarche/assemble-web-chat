@@ -76,7 +76,7 @@ func NewService(cfg *config.Config, userkey []byte) *Service {
 	}
 	s.DefMinExp = min
 
-	s.CreateRoom("Lobby", "lobby", false, "", s.DefMaxExp, s.DefMinExp, "", 1000)
+	s.CreateRoom("Lobby", "lobby", false, "", s.DefMaxExp, s.DefMinExp, "", cfg.MaxHistoryLen)
 
 	server, err := socketio.NewServer(nil)
 	if err != nil {
