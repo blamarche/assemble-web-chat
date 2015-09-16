@@ -170,13 +170,15 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 
 			//TODO use templates
 			fmt.Fprintf(w, `<html>`)
+			fmt.Fprintf(w, `<meta http-equiv="refresh" content="10; url=/#%s">`, base64.StdEncoding.EncodeToString(etok))
 			if ok {
-				fmt.Fprintf(w, `<strong>A message from your invite: </strong>`+invite+`<br><br>`)
+				fmt.Fprintf(w, `<strong>SUCCESS!</strong> `+invite+`<br><br>`)
 			} else {
-				fmt.Fprintf(w, `<strong>Delete your old login bookmark and close the window or you will still be using the old profile!</strong><br><br>`)
+				fmt.Fprintf(w, `<strong>Delete your old login bookmark and close the window or you will still be using your old profile!</strong><br><br>`)
 			}
-			fmt.Fprintf(w, "Token (KEEP THIS SOMEWHERE SAFE OR SAVE THE LOGIN LINK): <br><textarea rows='10' cols='60'>%s</textarea><br><br>", base64.StdEncoding.EncodeToString(etok))
-			fmt.Fprintf(w, "<a href='/#%s' target='_blank'>Assemble Chat Login</a> BOOKMARK THIS! <strong>DO NOT SHARE THIS LINK</strong>", base64.StdEncoding.EncodeToString(etok))
+			//fmt.Fprintf(w, "Token (KEEP THIS SOMEWHERE SAFE OR SAVE THE LOGIN LINK): <br><textarea rows='10' cols='60'>%s</textarea><br><br>", base64.StdEncoding.EncodeToString(etok))
+			fmt.Fprintf(w, "<a href='/#%s' target='_blank'>Assemble Chat Login - CLICK HERE AND BOOKMARK THE CHAT!</a> <strong>DO NOT SHARE THIS LINK</strong>", base64.StdEncoding.EncodeToString(etok))
+			fmt.Fprintf(w, "<br>You will automatically enter the chat in 10 seconds...")
 			fmt.Fprintf(w, `</html>`)
 		} else {
 			fmt.Fprintf(w, `Invalid Invite ID or Token`)

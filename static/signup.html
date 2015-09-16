@@ -48,6 +48,10 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
                     $("#token").val(key.substring(7));
                 } else {
                     $("#invite").val(key.substring(1));
+                    if ($("#invite").val().length > 0) {
+                        $("#invite").attr("readonly","");
+                        $("#invitegroup").hide();
+                    }
                 }
             }
 
@@ -99,27 +103,39 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
       <form action="/signup/" name="signup" method="POST">
           <input id="token" name="token" type="hidden"></input>
           <div id="invitegroup" class="form-group"><input id="invite" class="form-control" name="invite" autocomplete="off" placeholder="Invite ID" />
-              <span class="help-block">( ie: a1b2c3d4-e5f6-a1b2-c3d4-e5f6a1b2c3d4 )</span>
+             <!-- <span class="help-block">( ie: a1b2c3d4-e5f6-a1b2-c3d4-e5f6a1b2c3d4 )</span>-->
           </div>
           <div class="form-group"><input class="form-control" id="nick" name="nick" autocomplete="off" placeholder="Nickname"/></div>
-          <div class="form-group"><input class="form-control" name="name" autocomplete="off" placeholder="Your Name (optional)"/></div>
-          <div class="form-group"><input class="form-control" name="email" autocomplete="off" placeholder="Email (optional)"/></div>
-          <div class="form-group"><input class="form-control" name="phone" autocomplete="off" placeholder="Phone Number (optional)"/></div>
-          <div class="form-group"><input class="form-control" name="url" autocomplete="off" placeholder="Website (optional)"/></div>
-          <div class="form-group"><textarea class="form-control" name="desc" autocomplete="off" placeholder="Description (optional)"></textarea></div>
-          <div class="form-group"><input type="hidden" id="avatar" class="form-control" name="avatar" autocomplete="off" placeholder="Avatar Image DataUri (optional)"/>
-              <span class="help-block" style="text-align:center;">
-                  <a id="imgupFile">Drag your avatar image here.<br>
-                  <img id="avatarimg"></img></a>
-              </span>
-          </div>
           <div class="form-group"><input class="form-control" name="alertaddress" autocomplete="off" placeholder="Alert Email/Text Address (optional)"/>
               <span class="help-block">
                   To get text message alerts, enter your phone providers gateway email. <a href="#" data-toggle="modal" data-target="#smsgateways">Provider List</a>
               </span>
           </div>
+          <div class="form-group"><input type="hidden" id="avatar" class="form-control" name="avatar" autocomplete="off" placeholder="Avatar Image DataUri (optional)"/>
+              <span class="help-block" style="text-align:center;">
 
-          <div class="form-group"><input class="form-control btn btn-success" type="submit" value="Submit" name="submit"></input></div>
+                  <img id="avatarimg"></img></a><br>
+                  <a id="imgupFile">Drag your avatar image here.
+              </span>
+          </div>
+          <div class="form-group">
+              <div class="row">
+                  <div class="col-md-2"></div>
+                  <div class="col-md-8">
+                  <a class="form-control btn btn-info" role="button" data-toggle="collapse" href="#extrafields" aria-expanded="false" aria-controls="">Show Other Fields</a>
+                  </div>
+                  <div class="col-md-2"></div>
+              </div>
+          </div>
+          <div id="extrafields" class="collapse">
+              <div class="form-group"><input class="form-control" name="name" autocomplete="off" placeholder="Your Name (optional)"/></div>
+              <div class="form-group"><input class="form-control" name="email" autocomplete="off" placeholder="Email (optional)"/></div>
+              <div class="form-group"><input class="form-control" name="phone" autocomplete="off" placeholder="Phone Number (optional)"/></div>
+              <div class="form-group"><input class="form-control" name="url" autocomplete="off" placeholder="Website (optional)"/></div>
+              <div class="form-group"><textarea class="form-control" name="desc" autocomplete="off" placeholder="Description (optional)"></textarea></div>
+          </div>
+
+          <div class="form-group"><input id="submit" class="form-control btn btn-success" type="submit" value="Continue" name="submit"></input></div>
       </form>
       </div>
 
@@ -153,7 +169,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
                     <tr><td>Verizon</td><td>xxxyyyzzzz@vtext.com</td></tr>
                     <tr><td>Virgin Mobile</td><td>xxxyyyzzzz@vmobl.com</td></tr>
                 </table>
-                <label>For Example</label> <br>If your number is (444)555-6666 with Verizon, your address would be 4445556666@vtext.com
+                <label>For Example</label> <br>If your number is (444) 555-6666 with Verizon, your address would be 4445556666@vtext.com
                 <br><a href="https://duckduckgo.com/?q=list+of+sms+gateways" target="_blank">Click here to find more gateways</a>
             </div>
             <div class="modal-footer">

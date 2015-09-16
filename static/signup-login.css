@@ -32,3 +32,7 @@ body.updateprofile {
     height:64px;
     background:white;
 }
+
+#submit {
+    font-weight: bold;
+}

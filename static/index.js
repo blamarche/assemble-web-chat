@@ -27,6 +27,7 @@ var hasJoined = false;
 var enableSound = true;
 var smallImages = false;
 var noImages = false;
+var firstTime = false;
 
 //load settings from local
 if (storageAvailable('localStorage')) {
@@ -38,6 +39,11 @@ if (storageAvailable('localStorage')) {
         smallImages = localStorage.getItem("smallImages") == "true";
     if (localStorage.getItem("noImages"))
         noImages = localStorage.getItem("noImages") == "true";
+
+    if (!localStorage.getItem("firstTime")) {
+        localStorage.setItem("firstTime", "1");
+        firstTime = true;
+    }
 } else {
     //console.log("No local storage");
 }
@@ -91,6 +97,10 @@ $(document).ready(function(){
             if (typeof troom!="undefined") {
                 switchRoom(troom);
             }
+            ev.preventDefault();
+            return false;
+        } else if (ev.keyCode == 72 && ev.ctrlKey) { //help (H)
+            $('#firstTime').modal();
             ev.preventDefault();
             return false;
         }
@@ -307,6 +317,11 @@ $(document).ready(function(){
         if (storageAvailable('localStorage'))
             localStorage.setItem("cur_dur", cur_dur);
     });
+
+    if (firstTime) {
+        $('#firstTime').modal();
+    }
+
 });
 
 //setup notifications
@@ -662,7 +677,7 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
 
     if (m.indexOf("data:image/")==0) {
         if (noImages)
-            m = "<a class='autolink upload' href='"+m+"'>Image Uploaded</a>";
+            m = "<a class='autolink upload' target='_blank' href='"+m+"'>Image Uploaded</a>";
         else
             m = "<img class='autolink upload"+small+"' src='"+m+"'></img>";
     } else {
@@ -675,6 +690,7 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
             replaceFn : function( autolinker, match ) {
                 href = match.getAnchorHref();
                 switch( match.getType() ) {
+                    //TODO cleanup!
                     case 'url' :
                         if ( match.getUrl().indexOf( '.jpg' ) !== -1 ||
                              match.getUrl().indexOf( '.jpeg' ) !== -1 ||
@@ -700,7 +716,7 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
                             if (noImages)
                                 return "<a href='"+href+"' target='_blank'>"+href+"</a>";
 
-                            var frame = '<iframe class="autolink'+small+'" height="315" src="'+match.getUrl().replace('youtube.com/watch?v=', 'youtube.com/embed/')+'" frameborder="0" allowfullscreen></iframe>';
+                            var frame = "<a href='"+href+"' target='_blank'>"+href+"</a><br>"+'<iframe class="autolink'+small+'" height="315" src="'+match.getUrl().replace('youtube.com/watch?v=', 'youtube.com/embed/')+'" frameborder="0" allowfullscreen></iframe>';
                             return frame;
                         }
                         else if ( match.getUrl().indexOf('youtu.be/') !== -1 )
@@ -708,7 +724,7 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
                             if (noImages)
                                 return "<a href='"+href+"' target='_blank'>"+href+"</a>";
 
-                            var frame = '<iframe class="autolink'+small+'" height="315" src="'+match.getUrl().replace('youtu.be/', 'youtube.com/embed/')+'" frameborder="0" allowfullscreen></iframe>';
+                            var frame = "<a href='"+href+"' target='_blank'>"+href+"</a><br>"+'<iframe class="autolink'+small+'" height="315" src="'+match.getUrl().replace('youtu.be/', 'youtube.com/embed/')+'" frameborder="0" allowfullscreen></iframe>';
                             return frame;
                         }
                         break;
@@ -843,6 +859,9 @@ function fuzzyTime( previous) {
 function handleCommand(socket,c) {
     var ca = c.split(" ");
     switch (ca[0]) {
+        case "/?":
+            $('#firstTime').modal();
+            break;
         case "/help":
             appendSystemMessage(" \
                 /leave - Leaves the current room <br>\
