@@ -164,7 +164,14 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
               </div>
               <div class="modal-body">
                 <form>
+                    <div class="form-group"><label>History to Load</label><select class="form-control defaulthistory">
+                        <option value="15">(Choose one to change)</option>
+                        <option value="15">15 messages</option>
+                        <option value="50">50 messages</option>
+                        <option value="100">100 messages</option>
+                    </select></div>
                     <div class="form-group"><label>Message Duration</label><select class="form-control currentduration">
+                        <option value="48h">(Choose one to change)</option>
                         <option value="30s">30 seconds</option>
                         <option value="1m">1 minute</option>
                         <option value="3m">3 minutes</option>

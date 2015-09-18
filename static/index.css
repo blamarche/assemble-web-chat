@@ -1,5 +1,6 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font: 13px Helvetica, Arial; width: 100%; height: 100%;}
+a { cursor: pointer; }
 .connecting {
     font-size: 24px;
     padding-top: 100px;

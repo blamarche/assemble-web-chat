@@ -466,7 +466,7 @@ func socketHandlers(so socketio.Socket) {
 	}))
 
 	so.On("history", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
-		service.SendRoomHistory(so, uid, g.Path("room").Data().(string))
+		service.SendRoomHistory(so, uid, g.Path("room").Data().(string), int(g.Path("last").Data().(float64)))
 	}))
 
 	so.On("join", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {

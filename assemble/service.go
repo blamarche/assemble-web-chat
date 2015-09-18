@@ -434,13 +434,17 @@ func (svc *Service) JoinRoom(so socketio.Socket, uid string, room string) {
 	so.BroadcastTo(k, "joined", bc.String())
 }
 
-func (svc *Service) SendRoomHistory(so socketio.Socket, uid string, room string) {
+func (svc *Service) SendRoomHistory(so socketio.Socket, uid, room string, last int) {
 	v := svc.Rooms[room]
 	k := room
+	start := len(v.Messages) - last
+	if last == 0 || start < 0 {
+		start = 0
+	}
 
 	//send chat history
 	history := "{\"history\":["
-	for j := 0; j < len(v.Messages); j++ {
+	for j := start; j < len(v.Messages); j++ {
 		history += v.Messages[j].String()
 		if j < len(v.Messages)-1 {
 			history += ","

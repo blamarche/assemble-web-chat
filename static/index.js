@@ -28,6 +28,7 @@ var enableSound = true;
 var smallImages = false;
 var noImages = false;
 var firstTime = false;
+var defaultHistory = 15;
 
 //load settings from local
 if (storageAvailable('localStorage')) {
@@ -39,6 +40,8 @@ if (storageAvailable('localStorage')) {
         smallImages = localStorage.getItem("smallImages") == "true";
     if (localStorage.getItem("noImages"))
         noImages = localStorage.getItem("noImages") == "true";
+    if (localStorage.getItem("defaultHistory"))
+        defaultHistory = parseInt(localStorage.getItem("defaultHistory"));
 
     if (!localStorage.getItem("firstTime")) {
         localStorage.setItem("firstTime", "1");
@@ -226,6 +229,12 @@ $(document).ready(function(){
     });
 
     //other buttons
+    $("#messages").on('click', '.loadhistory', function(e) {
+        var room = $(e.currentTarget).attr("data-room");
+        $(e.currentTarget).parent().remove();
+        socket.emit("history",JSON.stringify({"t": token, "room": room, "last": 0}));   //request history
+    });
+
     $("#messages").on('click', '.userprofilelink', function(e) {
         socket.emit("userinfo", JSON.stringify({"t": token, "uid": $(e.currentTarget).attr("data-uid")}));
     });
@@ -316,6 +325,12 @@ $(document).ready(function(){
         cur_dur = $('#options .currentduration').val();
         if (storageAvailable('localStorage'))
             localStorage.setItem("cur_dur", cur_dur);
+    });
+
+    $('#options .defaulthistory').change(function(e) {
+        defaultHistory = parseInt($('#options .defaulthistory').val());
+        if (storageAvailable('localStorage'))
+            localStorage.setItem("defaultHistory", defaultHistory);
     });
 
     if (firstTime) {
@@ -524,13 +539,15 @@ socket.on('history', function(d){
     }
 
     var d=JSON.parse(d);
-    //console.log(d);
-    for (var i=0; i<d.history.length; i++) {
-        appendChatMessage(d.history[i].uid,d.room,d.name,d.history[i].nick,d.history[i].m,d.history[i].msgid, d.history[i].avatar,d.history[i].time);
+    var added = 0;
+    for (var i = d.history.length - 1; i >= 0; i--) {
+        added += appendChatMessage(d.history[i].uid,d.room,d.name,d.history[i].nick,d.history[i].m,d.history[i].msgid, d.history[i].avatar,d.history[i].time, 'prepend');
     }
-
     updateSidebar();
-    scrollToBottom();
+    if (added>0) {
+        appendSystemMessage("<a class='loadhistory' data-room='"+d.room+"'>Load more history...</a>",0, "", 'prepend');
+        scrollToBottom();
+    }
 });
 
 socket.on('join', function(d){
@@ -556,8 +573,8 @@ socket.on('join', function(d){
             switchOnJoin=false;
         }
         var t = (new Date()).getTime()/1000;
-        appendChatMessage("", d.room, d.name, "<em>SYSTEM</em>", "Joined "+d.name+" ("+d.minexptime+" - "+d.maxexptime+")", "", "/icons/icon_important.svg", t);
-        socket.emit("history",JSON.stringify({"t": token, "room": d.room}));   //request history
+        //appendChatMessage("", d.room, d.name, "<em>SYSTEM</em>", "Joined "+d.name+" ("+d.minexptime+" - "+d.maxexptime+")", "", "/icons/icon_important.svg", t, 'prepend');
+        socket.emit("history",JSON.stringify({"t": token, "room": d.room, "last": defaultHistory}));   //request history
     } else if (hasJoined) {
         setJoined();
     }
@@ -644,12 +661,17 @@ function scrollToBottom() {
     $(window).scrollTop($('body')[0].scrollHeight);
 }
 
-function appendSystemMessage(msg, lifetimeMs, cssclass) {
+function appendSystemMessage(msg, lifetimeMs, cssclass, mode) {
     if (typeof cssclass=="undefined")
         cssclass="";
+    if (typeof mode=="undefined")
+        mode="append"; //or prepend
 
     var sm = $('<li>').addClass("sysmsg").addClass(cssclass).html(msg);
-    $('#messages').append(sm);
+    if (mode=="append")
+        $('#messages').append(sm);
+    if (mode=='prepend')
+        $('#messages').prepend(sm);
     if (lifetimeMs>0) {
         setTimeout(function(){
             sm.slideUp(1000);
@@ -657,11 +679,14 @@ function appendSystemMessage(msg, lifetimeMs, cssclass) {
     }
 }
 
-function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
+function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode) {
+    if (typeof mode=="undefined") {
+        mode="append"; //other option: prefix
+    }
     if (id!="") {
         var msgelem = $("#messages li.chatmsg[data-msgid='"+id+"']");
         if (msgelem.length > 0)
-            return;
+            return 0;
     }
 
     var hide = "";
@@ -775,7 +800,12 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time) {
         return false;
     }
 
-    $('#messages').append(msgli);
+    if (mode=="append")
+        $('#messages').append(msgli);
+    else if (mode=="prepend")
+        $('#messages').prepend(msgli);
+
+    return 1;
 }
 
 function processIcons(m) {
