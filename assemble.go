@@ -36,7 +36,7 @@ import (
 	"github.com/kabukky/httpscerts"
 	"github.com/satori/go.uuid"
 
-	"github.com/blamarche/assemble-web-chat/assemble"
+	"github.com/blamarche/assemble-web-chat/assemble-lib"
 	"github.com/blamarche/assemble-web-chat/config"
 	"github.com/blamarche/assemble-web-chat/utils"
 )
