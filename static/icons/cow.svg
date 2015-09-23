@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+    xmlns:cc="http://creativecommons.org/ns#"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:svg="http://www.w3.org/2000/svg"
+    xmlns:ns1="http://sozi.baierouge.fr"
+    id="svg2728"
+    sodipodi:docname="Colour Cow B.svg"
+    viewBox="0 0 373.89 325.37"
+    sodipodi:version="0.32"
+    version="1.0"
+    inkscape:output_extension="org.inkscape.output.svg.inkscape"
+    inkscape:version="0.46dev+devel"
+  >
+  <defs
+      id="defs2730"
+    >
+    <linearGradient
+        id="linearGradient2494"
+        y2="326.19"
+        gradientUnits="userSpaceOnUse"
+        x2="373.43"
+        gradientTransform="matrix(.65391 0 0 .65391 121.05 274.98)"
+        y1="326.19"
+        x1="95.612"
+        inkscape:collect="always"
+      >
+      <stop
+          id="stop2344"
+          style="stop-color:#c98b2b;stop-opacity:0"
+          offset="0"
+      />
+      <stop
+          id="stop2346"
+          style="stop-color:#c98b2b"
+          offset="1"
+      />
+    </linearGradient
+    >
+  </defs
+  >
+  <sodipodi:namedview
+      id="base"
+      bordercolor="#666666"
+      inkscape:pageshadow="2"
+      guidetolerance="10"
+      pagecolor="#ffffff"
+      gridtolerance="10000"
+      inkscape:window-height="998"
+      inkscape:zoom="1.4"
+      objecttolerance="10"
+      showgrid="false"
+      borderopacity="1.0"
+      inkscape:current-layer="layer1"
+      inkscape:cx="216.26556"
+      inkscape:cy="179.74619"
+      inkscape:window-y="-4"
+      inkscape:window-x="-4"
+      inkscape:window-width="1280"
+      inkscape:pageopacity="0.0"
+      inkscape:document-units="px"
+  />
+  <g
+      id="layer1"
+      inkscape:label="Layer 1"
+      inkscape:groupmode="layer"
+      transform="translate(-112.34 -303.25)"
+    >
+    <g
+        id="g3549"
+        transform="matrix(1.0251 0 0 1.0301 -62.437 -85.629)"
+      >
+      <path
+          id="path3011"
+          sodipodi:nodetypes="ccccccccc"
+          style="stroke:#000000;stroke-width:1.8963;fill:#eaeaa4"
+          d="m473.8 479.08l-1.78 3.83c14.98-4.05 34.31 19.58 43.34 52.98l1.88 6.95c6.97 25.8 5.7 49.66-2.15 61.04 11.57-8.18 14.63-35.56 6.51-65.58l-1.88-6.95c-9.02-33.39-28.35-57.02-43.34-52.97l-2.58 0.7z"
+      />
+      <rect
+          id="rect3013"
+          style="stroke:#000000;stroke-width:.65391;fill:#2e3436"
+          height="80.975"
+          width="19.921"
+          y="569.49"
+          x="442.24"
+      />
+      <rect
+          id="rect3015"
+          style="stroke:#000000;stroke-width:.65391;fill:#2e3436"
+          height="80.975"
+          width="19.922"
+          y="584.92"
+          x="454.64"
+      />
+      <path
+          id="path3017"
+          style="stroke:#000000;stroke-width:.65391;fill:#000000"
+          d="m452.55 630.78c-12.59 0-20.13 1.32-22.8 20.79-1.18 8.54 1.18 13.8 5.12 16.89 0.8-3.56 2.85-11.24 4.22-13.68 1.27 9.28-1.3 11.2 0.03 16.01 4.67 1.64 10.3 1.55 15.44 0.25 13.27-3.36 20.79-1.23 20.79-19.47 0.01-18.2-10.21-20.79-22.8-20.79z"
+      />
+      <path
+          id="path3019"
+          style="stroke:#000000;stroke-width:.65391;fill:#000000"
+          d="m460.74 645.52c-13.04 0-20.84 1.36-23.61 21.51-1.21 8.85 1.23 14.28 5.31 17.49 0.82-3.69 2.95-11.64 4.36-14.17 1.32 9.61-1.34 11.6 0.04 16.58 4.83 1.7 10.65 1.6 15.98 0.26 13.73-3.48 21.52-1.27 21.52-20.16 0-18.84-10.57-21.51-23.6-21.51z"
+      />
+      <rect
+          id="rect3021"
+          style="stroke:#000000;stroke-width:.65391;fill:#2e3436"
+          height="80.975"
+          width="19.921"
+          y="569.49"
+          x="267.15"
+      />
+      <rect
+          id="rect3023"
+          style="stroke:#000000;stroke-width:.65391;fill:#2e3436"
+          height="80.975"
+          width="19.922"
+          y="584.92"
+          x="305.71"
+      />
+      <path
+          id="path3025"
+          style="stroke:#000000;stroke-width:.65391;fill:#000000"
+          d="m274.84 628.16c-12.59 0-20.13 1.32-22.8 20.79-1.17 8.55 1.19 13.8 5.13 16.89 0.79-3.56 2.84-11.23 4.21-13.68 1.28 9.28-1.29 11.2 0.03 16.01 4.67 1.65 10.3 1.55 15.45 0.25 13.26-3.35 20.79-1.23 20.79-19.47 0-18.2-10.21-20.79-22.81-20.79z"
+      />
+      <path
+          id="path3027"
+          style="stroke:#000000;stroke-width:.65391;fill:#000000"
+          d="m311.8 645.52c-13.03 0-20.83 1.36-23.6 21.51-1.21 8.85 1.23 14.28 5.31 17.49 0.82-3.69 2.94-11.64 4.36-14.17 1.32 9.61-1.34 11.6 0.03 16.58 4.83 1.7 10.66 1.6 15.99 0.26 13.73-3.48 21.52-1.27 21.52-20.16 0-18.84-10.57-21.51-23.61-21.51z"
+      />
+      <path
+          id="path3029"
+          sodipodi:nodetypes="ccccc"
+          style="stroke:#000000;stroke-width:3.2695;fill:#dcd59a"
+          d="m254.34 564.9l43.81-1.31-7.84 69.31c-9.38 3.27-17.44 4.58-28.12 0l-7.85-68z"
+      />
+      <path
+          id="path3031"
+          style="stroke:#000000;stroke-width:1.9617;fill:#c17d11"
+          d="m285.4 578.63c-10.65 0-19.29 8.05-19.29 17.98s8.64 17.98 19.29 17.98c2.35 0 4.58-0.38 6.66-1.1l3.64-32.08c-2.98-1.76-6.51-2.78-10.3-2.78z"
+      />
+      <path
+          id="path3033"
+          sodipodi:nodetypes="ccccc"
+          style="stroke:#000000;stroke-width:3.2695;fill:#c8c8c8"
+          d="m430.9 567.51l43.81-1.31-7.85 69.32c-9.37 3.27-17.44 4.58-28.12 0l-7.84-68.01z"
+      />
+      <rect
+          id="rect3035"
+          style="stroke:#000000;stroke-width:2.1477;fill:#dc634c"
+          transform="rotate(8.5)"
+          rx="5.4501"
+          ry="7.5481"
+          height="44.17"
+          width="11.879"
+          y="534.68"
+          x="447.46"
+      />
+      <rect
+          id="rect3037"
+          style="stroke:#000000;stroke-width:2.1477;fill:#dc634c"
+          transform="rotate(4.634)"
+          rx="5.4501"
+          ry="7.5481"
+          height="44.17"
+          width="11.879"
+          y="560.66"
+          x="449.87"
+      />
+      <path
+          id="path3039"
+          sodipodi:nodetypes="cscccccccccccccscc"
+          style="stroke:#000000;stroke-width:2.8435;fill:#ef856d"
+          d="m383.23 553.52c-20.05 0-36.2 15.96-36.2 35.79 0 18.4 13.91 33.46 31.94 35.53l-1.31 16.17c0 4.19 2.43 7.56 5.45 7.56h0.99c3.02 0 5.46-3.37 5.46-7.56l1.3-15.91h21c1.6 0 3.16-0.12 4.7-0.31l2.62 12.3c0 4.18 2.43 7.55 5.45 7.55h0.99c3.02 0 5.45-3.37 5.45-7.55l-2.61-15.95c11.66-5.93 19.6-17.93 19.6-31.83 0-19.83-16.14-35.79-36.2-35.79h-28.63z"
+      />
+      <path
+          id="path3041"
+          sodipodi:nodetypes="csccccccccscc"
+          style="stroke:#000000;stroke-width:3.2094;fill:#dcdcdc"
+          d="m303.18 460.97c-33.19 0-59.91 32.2-59.91 72.21 0 36.06 21.7 65.78 50.28 71.3l5.26 45.42c10.68 4.58 18.74 3.27 28.11 0l5.05-41.89c36.1 6.54 67.61 3.27 106.32-2.61l8.3 44.5c10.68 4.58 18.74 3.27 28.12 0l7.66-67.72c9.83-12.85 15.84-30.05 15.84-49 0-40.01-26.73-72.21-59.92-72.21h-135.11z"
+      />
+      <path
+          id="path3043"
+          style="fill-opacity:.87898;stroke:#000000;stroke-width:1.9617;fill:#f4eebd"
+          d="m301.69 462.29c-22.52 0.46-41.82 17.4-50.27 37.55-12.96 29.58-7.63 67.8 16.57 90.13 7.42 6.79 16.81 11.66 26.75 13.42 1.96 15.16 3.24 30.91 5.56 45.7 8.04 3.62 17.41 2.88 25.42-0.17 1.71-14.14 3.38-28.3 5.13-42.44 35.87 7.08 72.74 3.08 108.51-2.57 2.78 15.02 5.6 30.03 8.39 45.05 8.07 3.72 17.64 3.08 25.75-0.04 2.67-22.48 4.85-45.16 7.83-67.51 22.87-30.27 20.64-77.49-6.91-104.14-10.88-10.63-26.14-16.13-41.36-15-43.79 0.02-87.58-0.02-131.37 0.02z"
+      />
+      <path
+          id="path3045"
+          sodipodi:nodetypes="cccccccccccc"
+          style="fill:#dcd59a"
+          d="m361.58 593.67c-48.91 9.48-99.6-10.46-99.6-10.46 8.33 8.94 18.73 16.43 30.27 18.65l5.25 45.43c10.68 4.58 18.74 3.27 28.12 0l5.7-39.28c36.09 6.54 68.26 2.62 106.97-3.27l8.95 46.47c10.68 4.58 28.56-0.65 26.16-5.23l7.66-67.72c9.84-12.86 15.84-30.06 15.84-49-39.76-46.55-47.86 38.98-135.32 64.41z"
+      />
+      <path
+          id="path3047"
+          sodipodi:nodetypes="cscccc"
+          style="stroke:#000000;stroke-width:1.9617;fill:#e9b96e"
+          d="m424.36 487.08c-16.97 0-30.74 6.89-30.74 15.37 0 6.41 7.88 11.92 19.05 14.22 2.01 6.35 7.95 10.95 14.96 10.95 10.41 0.77 27.53-13.22 27.46-25.17 0-8.48-13.77-15.37-30.73-15.37z"
+      />
+      <path
+          id="path3049"
+          style="stroke:#000000;stroke-width:1.9617;fill:#c17d11"
+          d="m484.54 526.74c-2.31 0.08-11.95 4.68-14.33 11.82-2.38 7.13-2.97 11.85-5.29 24.39-0.22 0-0.45-0.02-0.68-0.02-10.46 0-18.96 6.74-18.96 15.04 0 8.31 8.5 15.04 18.96 15.04h0.02c0.18 6.53 5.51 11.77 12.08 11.77 1.23 0 2.42-0.19 3.54-0.53l2.49-22.05c-0.07-0.04-0.15-0.08-0.22-0.12 10.51-13.62 15.05-32.46 16.04-48.9v-0.33c-3.95-4.06-8.98-6.26-13.65-6.11z"
+      />
+      <path
+          id="path3051"
+          style="stroke:#000000;stroke-width:2.3673;fill:#c17d11"
+          d="m391.76 583.23c-7.14 0-12.96 4.13-13.24 9.31-12.17 1.42-21.31 7.33-21.31 14.37 0 1.49 0.4 2.92 1.16 4.27 17.42 1.05 34.41 0.08 52.5-2.02 0.21-0.74 0.31-1.48 0.31-2.25 0-3.88-2.78-7.41-7.3-10.03 0.73-1.21 1.15-2.54 1.15-3.95 0-5.36-5.95-9.7-13.27-9.7z"
+      />
+      <path
+          id="path3053"
+          style="stroke:#000000;stroke-width:1.9617;fill:#c17d11"
+          d="m302.4 613.47c-2.79 0-5.39 0.7-7.6 1.88l2.62 22.46c1.56 0.49 3.23 0.79 4.98 0.79 8.02 0 14.53-5.63 14.53-12.56 0-6.94-6.51-12.57-14.53-12.57z"
+      />
+      <path
+          id="path3055"
+          style="stroke:#000000;stroke-width:1.9617;fill:#c17d11"
+          d="m461.72 621.48c-2.03 0-3.89 0.74-5.37 1.96-0.79-0.86-1.88-1.4-3.09-1.4-2.41 0-4.36 2.1-4.36 4.7 0 2.52 1.84 4.59 4.15 4.7 0.4 4.66 4.12 8.3 8.67 8.3 4.81 0 8.71-4.09 8.71-9.13s-3.9-9.13-8.71-9.13z"
+      />
+      <path
+          id="path3057"
+          sodipodi:nodetypes="cccccccccccsc"
+          style="stroke:#000000;stroke-width:.65391;fill:#000000"
+          d="m523.55 580.18c-5.2-0.54-8.48 0.91-12.33 27.02-1.69 11.46-1.46 16.03-0.27 20.37 0.83-4.77 2.77-12.4 3.68-15.63-0.78 12.56-0.8 12.4-0.93 18.94 1.32 1.88 1.73 5 3.52 4.39 1.62-11.6 4.99-35.79 4.99-35.79l-2.87 32.04c1.67-1.01 1.76-2.84 2.98-3.72 0.81-11.37 1.77-18 1.77-18l0.5 23.31c1.65-2.88 5.37-6.97 5.46-23.93 0.12-24.66-1.3-28.45-6.5-29z"
+      />
+      <path
+          id="path3059"
+          style="stroke:#000000;stroke-width:1.9617;fill:#e9b96e"
+          d="m374.66 515.85c-13.36 0-24.19 10.7-24.19 23.87 0 0.68 0.04 1.35 0.1 2.02-3.35 0.09-6.88 0.57-10.47 1.41-16.68 3.95-28.36 14.99-26.07 24.65s17.69 14.29 34.37 10.34c11.02-2.61 19.86-8.3 23.93-14.65 0.77 0.07 1.54 0.1 2.33 0.1 13.35 0 24.19-10.69 24.19-23.87 0-13.17-10.84-23.87-24.19-23.87z"
+      />
+      <g
+          id="g3448"
+          transform="matrix(.82843 0 0 .82843 30.092 65.604)"
+        >
+        <path
+            id="path3061"
+            sodipodi:nodetypes="cccsz"
+            style="stroke:#000000;stroke-width:1.9617;fill:#eeeeec"
+            d="m245.66 393.62c5.05 1.57-0.19 7.81 26.74 18.71 1.75 10.65-7.47 18.56-20.1 23.84-7.66-4.53-13.5-14.5-14.29-21.11-1.05-8.83 2.37-23.08 7.65-21.44z"
+        />
+        <path
+            id="path3063"
+            style="stroke:#000000;stroke-width:1.9617;fill:#eeeeec"
+            d="m244.57 394.82c-3.94 2.34-4.33 8.02-5.15 12.12-1.97 10.88 4.18 21.68 12.98 27.77 8.12-3.56 18.03-9.23 18.88-19.05 0.99-3.76-4.05-3.46-6.21-5.09-7.2-3.4-14.61-7.65-18.54-14.91-0.49-0.52-1.2-0.95-1.96-0.84z"
+        />
+        <path
+            id="path3065"
+            sodipodi:nodetypes="csssc"
+            style="stroke:#000000;stroke-width:1.6574;fill:#dcdcdc"
+            d="m178.86 469.23c7.81 6.22 30.61 0.36 50.9-13.08s28.79-33.87 22.6-35.61c-4.32-1.22-30.62-0.36-50.91 13.08-20.28 13.44-30.41 29.4-22.59 35.61z"
+        />
+        <path
+            id="path3067"
+            style="stroke:#000000;stroke-width:1.6574;fill:#dcd59a"
+            d="m245.49 421.49c-20.51 0.82-40.78 8.57-55.64 22.8-5.5 5.5-12.34 11.92-12.26 20.31 1.06 5.73 8.43 6.12 13.1 5.7 15.97-1.83 30.93-9.55 43.65-19.12 8.26-6.96 16.27-15.54 18.65-26.3 0.71-2.29-1.15-3.86-3.33-3.37-1.39-0.08-2.78-0.09-4.17-0.02z"
+        />
+        <path
+            id="path3069"
+            style="stroke:#000000;stroke-width:3.2695;fill:#dcdcdc"
+            d="m295.05 401.15c-21.21 0-40.35 10.31-53.93 26.83-20.49 4.75-37.33 16.66-45.59 34.6-5.14 11.16-6.34 23.32-4.19 35.41-7.66 7.74-10.98 17.48-7.52 24.18 3.15 6.08 11.05 7.99 19.84 5.64 0.54 0.8 1.09 1.59 1.66 2.39-8.46 10.62-7.54 23.12 3.68 31.04 10.26 7.24 26.34 8.66 41.03 4.64 44.96 19.76 94.03 7.68 110.2-27.45 3.26-7.07 4.93-14.54 5.17-22.15 2.7-8.94 4.17-18.56 4.17-28.56 0-47.78-33.38-86.57-74.52-86.57z"
+        />
+        <path
+            id="path3071"
+            style="stroke:#000000;stroke-width:1.9617;fill:#fbfec6"
+            d="m293.13 401.83c-20.04 0.47-38.88 11.17-51.27 26.67-20.78 4.37-40.42 18.45-47.23 39.17-3.32 9.62-3.76 20.11-1.9 30.1-5.8 5.77-11.44 14.91-7.76 23.13 3.67 6.8 12.8 6.74 19.27 4.76 1.8 2.31 3.61 4.44 0.67 6.64-5.31 7.08-5.36 17.97 1.31 24.22 11.38 10.85 28.98 11.23 43.48 7.44 11.14 4.28 22.92 8.1 35 9.01 23.99 2.34 50.47-4.37 66.42-23.28 8.41-9.68 12.59-22.39 13.22-35.06 10.57-35.38-0.23-77.8-30.69-100.01-11.69-8.53-25.97-13.26-40.52-12.79z"
+        />
+        <path
+            id="path3073"
+            sodipodi:nodetypes="csscc"
+            style="stroke:#000000;stroke-width:2.1315;fill:none"
+            d="m251.08 528.61c0.26 0.16 0.52 0.31 0.79 0.46 13.49 7.79 28.28 7.41 33.04-0.84 3.89-6.73-0.09-16.62-9.01-24.27"
+        />
+        <path
+            id="path3075"
+            sodipodi:nodetypes="czcscsc"
+            style="fill:#dcd59a"
+            d="m345.97 424.69c1.51 26.65-2.13 71.43-16.98 92.84s-27.54 29.91-80.27 47.04c44.96 19.76 94.03 7.68 110.2-27.44 3.26-7.07 4.93-14.55 5.17-22.16 2.7-8.94 4.17-18.55 4.17-28.56 0-24.16-8.54-46.01-22.29-61.72z"
+        />
+        <path
+            id="path3077"
+            sodipodi:rx="11.5"
+            sodipodi:ry="23"
+            style="stroke:#000000;stroke-width:3;fill:#000000"
+            sodipodi:type="arc"
+            d="m417 161.09a11.5 23 0 1 1 -23 0 11.5 23 0 1 1 23 0z"
+            transform="matrix(.57276 .13688 -.11521 .26078 50.193 320.04)"
+            sodipodi:cy="161.09448"
+            sodipodi:cx="405.5"
+        />
+        <path
+            id="path3079"
+            sodipodi:rx="11.5"
+            sodipodi:ry="23"
+            style="stroke:#000000;stroke-width:3;fill:#eeeeec"
+            sodipodi:type="arc"
+            d="m417 161.09a11.5 23 0 1 1 -23 0 11.5 23 0 1 1 23 0z"
+            transform="matrix(.35247 .084231 -.070897 .16048 134.04 355.22)"
+            sodipodi:cy="161.09448"
+            sodipodi:cx="405.5"
+        />
+        <path
+            id="path3081"
+            sodipodi:rx="24.5"
+            sodipodi:ry="15"
+            style="stroke:#000000;stroke-width:3;fill:#000001"
+            sodipodi:type="arc"
+            d="m361 269.09a24.5 15 0 1 1 -49 0 24.5 15 0 1 1 49 0z"
+            transform="matrix(.54271 .31333 -.31333 .54271 159.63 259.93)"
+            sodipodi:cy="269.09448"
+            sodipodi:cx="336.5"
+        />
+        <path
+            id="path3083"
+            sodipodi:rx="24.5"
+            sodipodi:ry="15"
+            style="stroke:#000000;stroke-width:3;fill:#000000"
+            sodipodi:type="arc"
+            d="m361 269.09a24.5 15 0 1 1 -49 0 24.5 15 0 1 1 49 0z"
+            transform="matrix(-.44737 .27701 .25829 .47979 284.04 287.65)"
+            sodipodi:cy="269.09448"
+            sodipodi:cx="336.5"
+        />
+        <path
+            id="path3085"
+            sodipodi:rx="11.5"
+            sodipodi:ry="23"
+            style="stroke:#000000;stroke-width:3;fill:#000000"
+            sodipodi:type="arc"
+            d="m417 161.09a11.5 23 0 1 1 -23 0 11.5 23 0 1 1 23 0z"
+            transform="matrix(-.71022 .16972 .14286 .32336 558.18 298.27)"
+            sodipodi:cy="161.09448"
+            sodipodi:cx="405.5"
+        />
+        <path
+            id="path3087"
+            sodipodi:rx="11.5"
+            sodipodi:ry="23"
+            style="stroke:#000000;stroke-width:3;fill:#eeeeec"
+            sodipodi:type="arc"
+            d="m417 161.09a11.5 23 0 1 1 -23 0 11.5 23 0 1 1 23 0z"
+            transform="matrix(-.43706 .10445 .087911 .19899 454.21 341.9)"
+            sodipodi:cy="161.09448"
+            sodipodi:cx="405.5"
+        />
+        <path
+            id="path3089"
+            style="stroke:#000000;stroke-width:1.9617;fill:none"
+            d="m204.71 527.04s4.07 6.92 20.29 6.92c16.21 0 27.97-5.35 27.97-5.35"
+        />
+        <path
+            id="path3091"
+            sodipodi:nodetypes="csscc"
+            style="stroke:#000000;stroke-width:3.2695;fill:none"
+            d="m267.46 557.85c-0.34 0.24-0.68 0.46-1.03 0.69-17.39 11.6-43.1 12.81-57.43 2.69-11.7-8.25-12.21-21.48-2.56-32.38"
+        />
+        <path
+            id="path3093"
+            sodipodi:nodetypes="cs"
+            style="stroke:#000000;stroke-width:1.9617;fill:none"
+            d="m228.18 534.16s-13.07-0.65-13.07 13.08"
+        />
+        <path
+            id="path3095"
+            sodipodi:nodetypes="cccsz"
+            style="stroke:#000000;stroke-width:1.9617;fill:#eeeeec"
+            d="m341.75 383.74c-4.98 2.81 1.97 8.23-24.02 25.9 0.58 11.69 12.13 17.97 26.69 20.7 7.07-6.55 10.97-18.44 10.3-25.62-0.9-9.6-7.76-23.92-12.97-20.98z"
+        />
+        <path
+            id="path3097"
+            style="stroke:#000000;stroke-width:1.9617;fill:#eeeeec"
+            d="m342.95 384.68c-3.31 1.31-2.71 6.05-4.99 8.45-4.76 7.09-11.9 12.27-18.86 17.16 0.8 9.51 10.32 14.76 18.52 17.07 2.73 0.38 6.54 3.16 8.13-0.34 6.89-8.61 10.08-20.86 5.51-31.25-1.83-4-3.45-9.55-8.01-11.11-0.1 0.02-0.22-0.03-0.3 0.02z"
+        />
+        <path
+            id="path3099"
+            sodipodi:nodetypes="csssc"
+            style="stroke:#000000;stroke-width:1.9617;fill:#dcdcdc"
+            d="m419.02 498.34c-8.75 11.26-36.44 4.39-61.8-15.32-25.36-19.72-37.32-52.46-30.1-56.11 5.03-2.55 36.44-4.39 61.8 15.32 25.37 19.72 38.85 44.85 30.1 56.11z"
+        />
+        <path
+            id="path3101"
+            style="stroke:#000000;stroke-width:1.9617;fill:#dcd59a"
+            d="m336.94 426.7c-3.31 0.42-7.4-0.21-9.95 2.08-1.92 6.45 1.52 13.21 3.95 19.17 11.67 25.05 34.68 43.62 60.58 52.21 8.2 2.26 18.64 4.51 25.7-1.74 5.82-6.61 2.48-16.18-0.96-23.08-8.3-15.42-21.18-28.01-35.87-37.33-13.02-7.7-28.32-11.59-43.45-11.31z"
+        />
+        <path
+            id="path3103"
+            sodipodi:nodetypes="cccccccccccccsc"
+            style="fill-opacity:.31847;fill:url(#linearGradient2494)"
+            d="m304.13 401.83c-20.03 0.47-50.1 11.83-62.5 27.33-20.78 4.37-40.41 18.45-47.22 39.17-3.32 9.62-3.76 20.11-1.9 30.1-5.81 5.78-11.44 14.91-7.77 23.13 3.67 6.8 12.81 6.74 19.27 4.76 1.8 2.31 3.61 4.44 0.68 6.64-5.31 7.08-5.36 17.97 1.31 24.22 11.38 10.85 28.98 11.23 43.48 7.44 11.13 4.28 22.91 8.1 35 9.01 23.99 2.34 50.47-4.37 66.42-23.28 8.41-9.68 10.6-22.39 11.24-35.06 13.39-39.1-15.31-32.22-35.98-73.59-5.85-4.26-1.27-18.81-5.65-26.28-4.37-7.48-9.1-13.83-16.38-13.59z"
+        />
+      </g
+      >
+    </g
+    >
+  </g
+  >
+  <metadata
+    >
+    <rdf:RDF
+      >
+      <cc:Work
+        >
+        <dc:format
+          >image/svg+xml</dc:format
+        >
+        <dc:type
+            rdf:resource="http://purl.org/dc/dcmitype/StillImage"
+        />
+        <cc:license
+            rdf:resource="http://creativecommons.org/licenses/publicdomain/"
+        />
+        <dc:publisher
+          >
+          <cc:Agent
+              rdf:about="http://openclipart.org/"
+            >
+            <dc:title
+              >Openclipart</dc:title
+            >
+          </cc:Agent
+          >
+        </dc:publisher
+        >
+        <dc:title
+          >Colour Cow 2</dc:title
+        >
+        <dc:date
+          >2007-12-17T05:04:25</dc:date
+        >
+        <dc:description
+          >Originally I did a colour version of Mairin's "Gray Cow" for my own purposes, and then I found the "Cow-Insane Animation" and took just the cow from that, and then did a half-half mix.&#13;\n&#13;\nAnd yes, colour is how we spell it in Australia ;^)</dc:description
+        >
+        <dc:source
+          >https://openclipart.org/detail/10207/colour-cow-2-by-rygle</dc:source
+        >
+        <dc:creator
+          >
+          <cc:Agent
+            >
+            <dc:title
+              >rygle</dc:title
+            >
+          </cc:Agent
+          >
+        </dc:creator
+        >
+        <dc:subject
+          >
+          <rdf:Bag
+            >
+            <rdf:li
+              >animal</rdf:li
+            >
+            <rdf:li
+              >bovine</rdf:li
+            >
+            <rdf:li
+              >bull</rdf:li
+            >
+            <rdf:li
+              >cartoon</rdf:li
+            >
+            <rdf:li
+              >cow</rdf:li
+            >
+            <rdf:li
+              >dairy</rdf:li
+            >
+            <rdf:li
+              >farm</rdf:li
+            >
+            <rdf:li
+              >mammal</rdf:li
+            >
+            <rdf:li
+              >milk</rdf:li
+            >
+            <rdf:li
+              >remix</rdf:li
+            >
+          </rdf:Bag
+          >
+        </dc:subject
+        >
+      </cc:Work
+      >
+      <cc:License
+          rdf:about="http://creativecommons.org/licenses/publicdomain/"
+        >
+        <cc:permits
+            rdf:resource="http://creativecommons.org/ns#Reproduction"
+        />
+        <cc:permits
+            rdf:resource="http://creativecommons.org/ns#Distribution"
+        />
+        <cc:permits
+            rdf:resource="http://creativecommons.org/ns#DerivativeWorks"
+        />
+      </cc:License
+      >
+    </rdf:RDF
+    >
+  </metadata
+  >
+</svg
+>

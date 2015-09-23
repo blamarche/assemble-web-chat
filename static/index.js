@@ -545,7 +545,11 @@ socket.on('history', function(d){
     }
     updateSidebar();
     if (added>0) {
-        appendSystemMessage("<a class='loadhistory' data-room='"+d.room+"'>Load more history...</a>",0, "", 'prepend');
+        //bug fix applying .chatmsg to load more links
+        var hiddenclass="";
+        if (d.room!=cur_room)
+            hiddenclass="hidden";
+        appendSystemMessage("<a class='loadhistory' data-room='"+d.room+"'>Load more history...</a>",0, "chatmsg", 'prepend').removeClass("sysmsg").addClass(hiddenclass).attr('data-room', d.room);
         scrollToBottom();
     }
 });
@@ -628,7 +632,7 @@ function updateSidebar() {
             $("#sidebar").append($("<li>")
                 .attr("data-room", r)
                 .attr("title", rm.minexptime+" - "+rm.maxexptime)
-                .html("<div>"+rm.friendlyname+"</div><span></span>")
+                .html("<div class='title'>"+rm.friendlyname+"</div><span></span>")
                 .on('click', function(ev) {
                     var rm = $(ev.currentTarget).attr("data-room");
                     switchRoom(rm);
@@ -646,8 +650,10 @@ function updateSidebar() {
 
         if (rm.mcount > 0) {
             $("#sidebar li[data-room='"+r+"'] span").html(rm.mcount);
+            $("#sidebar li[data-room='"+r+"']").addClass("newmsg");
         } else {
             $("#sidebar li[data-room='"+r+"'] span").text("");
+            $("#sidebar li[data-room='"+r+"']").removeClass("newmsg");
         }
         if (r == cur_room) {
             $("#sidebar li.active").removeClass("active");
@@ -677,6 +683,7 @@ function appendSystemMessage(msg, lifetimeMs, cssclass, mode) {
             sm.slideUp(1000);
         }, lifetimeMs);
     }
+    return sm;
 }
 
 function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode) {
@@ -957,55 +964,56 @@ function storageAvailable(type) {
 }
 
 var icon_lib = {
-    ">:|":"icon_angry.svg",
-    ">:(":"icon_angry.svg",
-    ":D":"icon_bigsmile.svg",
-    ":-D":"icon_bigsmile.svg",
-    ":$":"icon_blush.svg",
-    ":-$":"icon_blush.svg",
-    "o.O":"icon_confused.svg",
-    "O.o":"icon_confused.svg",
-    "O_o":"icon_confused.svg",
-    "o_O":"icon_confused.svg",
-    "8-)":"icon_cool.svg",
-    ";(":"icon_cry.svg",
-    ":'(":"icon_cry.svg",
-    ";-(":"icon_cry.svg",
-    "(important)":"icon_important.svg",
-    ":*":"icon_kiss.svg",
-    "X-D":"icon_lol.svg",
-    ":|":"icon_neutral.svg",
-    ":-|":"icon_neutral.svg",
-    ":(":"icon_sad.svg",
-    ":-|":"icon_neutral.svg",
-    ":-(":"icon_sad.svg",
-    ":-#":"icon_sick.svg",
-    ":)":"icon_smile.svg",
-    ":-)":"icon_smile.svg",
-    ":O":"icon_surprised.svg",
-    ":-O":"icon_surprised.svg",
-    "(thinking)":"icon_think.svg",
-    ":P":"icon_tongue.svg",
-    ":-P":"icon_tongue.svg",
-    "(twisted)":"icon_twisted.svg",
-    ";)":"icon_wink.svg",
-    ";-)":"icon_wink.svg",
+    ">:|":"angry.svg",
+    ">:(":"angry.svg",
+    ":D":"bigsmile.svg",
+    ":-D":"bigsmile.svg",
+    ":$":"blush.svg",
+    ":-$":"blush.svg",
+    "o.O":"confused.svg",
+    "O.o":"confused.svg",
+    "O_o":"confused.svg",
+    "o_O":"confused.svg",
+    "8-)":"cool.svg",
+    ";(":"cry.svg",
+    ":'(":"cry.svg",
+    ";-(":"cry.svg",
+    "(important)":"important.svg",
+    ":*":"kiss.svg",
+    "X-D":"lol.svg",
+    ":|":"neutral.svg",
+    ":-|":"neutral.svg",
+    ":(":"sad.svg",
+    ":-|":"neutral.svg",
+    ":-(":"sad.svg",
+    ":-#":"sick.svg",
+    ":)":"smile.svg",
+    ":-)":"smile.svg",
+    ":O":"surprised.svg",
+    ":-O":"surprised.svg",
+    "(thinking)":"think.svg",
+    ":P":"tongue.svg",
+    ":-P":"tongue.svg",
+    "(twisted)":"twisted.svg",
+    ";)":"wink.svg",
+    ";-)":"wink.svg",
 
-    "(angry)":"icon_angry.svg",
-    "(bigsmile)":"icon_bigsmile.svg",
-    "(blush)":"icon_blush.svg",
-    "(confused)":"icon_confused.svg",
-    "(shades)":"icon_cool.svg",
-    "(cry)":"icon_cry.svg",
-    "(kiss)":"icon_kiss.svg",
-    "(lol)":"icon_lol.svg",
-    "(neutral)":"icon_neutral.svg",
-    "(sad)":"icon_sad.svg",
-    "(sick)":"icon_sick.svg",
-    "(smile)":"icon_smile.svg",
-    "(surprised)":"icon_surprised.svg",
-    "(tongue)":"icon_tongue.svg",
-    "(wink)":"icon_wink.svg",
-    "(y)":"icon_thumbsup.svg",
-    "(n)":"icon_thumbsdown.svg",
+    "(angry)":"angry.svg",
+    "(bigsmile)":"bigsmile.svg",
+    "(blush)":"blush.svg",
+    "(confused)":"confused.svg",
+    "(shades)":"cool.svg",
+    "(cry)":"cry.svg",
+    "(kiss)":"kiss.svg",
+    "(lol)":"lol.svg",
+    "(neutral)":"neutral.svg",
+    "(sad)":"sad.svg",
+    "(sick)":"sick.svg",
+    "(smile)":"smile.svg",
+    "(surprised)":"surprised.svg",
+    "(tongue)":"tongue.svg",
+    "(wink)":"wink.svg",
+    "(eek)":"eek.svg",
+    "(y)":"y.svg",
+    "(n)":"n.svg",
 };

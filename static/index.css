@@ -132,18 +132,21 @@ form.msg .glyphicon img { width: 20px; margin-top: -4px; }
 }
 #sidebar li { padding: 8px 8px; font-size: 14px; border-bottom: 1px solid #666; cursor:pointer; }
 #sidebar li:nth-child(odd) { background: #333; }
+#sidebar li.newmsg { font-weight: bold; color: #ee0; }
 #sidebar li.active { background: #0a6; }
 #sidebar li span {
     float: right;
     display: block;
-    margin-top: -19px;
+    margin-top: -20px;
     background-color: #777;
     border-radius: 50px;
     padding: 0px 5px;
     font-size: 12px;
     font-weight: bold;
+    color: #eee;
 }
 #sidebar li div { display: block; margin-top: 3px; }
+#sidebar li div.title { margin-top: 0px; padding: 5px 0; }
 #sidebar .menuitems {
     background-color: #222 !important;
     height: 68px;

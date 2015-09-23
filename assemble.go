@@ -108,9 +108,21 @@ func main() {
 	http.Handle("/socket.io/", service.SocketServer)
 	http.HandleFunc("/signup/", signupHandler)
 	http.HandleFunc("/login/", loginHandler)
+	http.HandleFunc("/iconlib.js", iconlibHandler)
 	http.Handle("/", http.FileServer(http.Dir("./static")))
 
 	service.Start()
+}
+
+func iconlibHandler(w http.ResponseWriter, r *http.Request) {
+	//TODO cache
+	iconfiles, err := ioutil.ReadDir("./static/icons")
+	if err == nil {
+		for _, f := range iconfiles {
+			fcode := strings.Replace(f.Name(), ".svg", "", -1)
+			fmt.Fprintf(w, "icon_lib['(%s)'] = '%s';\n", fcode, f.Name())
+		}
+	}
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
