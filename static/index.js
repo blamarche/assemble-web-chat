@@ -1002,7 +1002,7 @@ var icon_lib = {
     "(bigsmile)":"bigsmile.svg",
     "(blush)":"blush.svg",
     "(confused)":"confused.svg",
-    "(shades)":"cool.svg",
+    "(shades)":"shades.svg",
     "(cry)":"cry.svg",
     "(kiss)":"kiss.svg",
     "(lol)":"lol.svg",
