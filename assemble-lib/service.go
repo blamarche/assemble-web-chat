@@ -21,11 +21,13 @@ import (
 	"encoding/base64"
 	"fmt"
 	"html"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"net/mail"
 	"net/smtp"
+	"strings"
 	"time"
 
 	"github.com/Jeffail/gabs"
@@ -49,6 +51,8 @@ type Service struct {
 	UserKey     []byte
 	DefMaxExp   time.Duration
 	DefMinExp   time.Duration
+
+	IconsJs string
 }
 
 // NewService creates an assemble server
@@ -83,6 +87,15 @@ func NewService(cfg *config.Config, userkey []byte) *Service {
 		log.Fatal(err)
 	}
 	s.SocketServer = server
+
+	s.IconsJs = ""
+	iconfiles, err := ioutil.ReadDir("./static/icons")
+	if err == nil {
+		for _, f := range iconfiles {
+			fcode := strings.Replace(f.Name(), ".svg", "", -1)
+			s.IconsJs += fmt.Sprintf("icon_lib['(%s)'] = '%s';\n", fcode, f.Name())
+		}
+	}
 
 	return &s
 }
