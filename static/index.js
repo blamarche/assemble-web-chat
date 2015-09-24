@@ -974,7 +974,7 @@ var icon_lib = {
     "O.o":"confused.svg",
     "O_o":"confused.svg",
     "o_O":"confused.svg",
-    "8-)":"cool.svg",
+    "8-)":"shades.svg",
     ";(":"cry.svg",
     ":'(":"cry.svg",
     ";-(":"cry.svg",
