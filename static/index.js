@@ -28,12 +28,16 @@ var enableSound = true;
 var smallImages = false;
 var noImages = false;
 var firstTime = false;
+var autoScroll = true;
 var defaultHistory = 15;
+var reconnectCount = 0;
 
 //load settings from local
 if (storageAvailable('localStorage')) {
     if (localStorage.getItem("enableSound"))
         enableSound = localStorage.getItem("enableSound") == "true";
+    if (localStorage.getItem("autoScroll"))
+        autoScroll = localStorage.getItem("autoScroll") == "true";
     if (localStorage.getItem("cur_dur"))
         cur_dur = localStorage.getItem("cur_dur");
     if (localStorage.getItem("smallImages"))
@@ -65,6 +69,7 @@ function auth(d) {
 socket.on('disconnect', function(d) {
     $(".connecting").removeClass("hidden");
     hasJoined=false;
+    reconnectCount++;
 });
 
 socket.io.on('connect_timeout', function(e) {
@@ -177,6 +182,19 @@ $(document).ready(function(){
         socket.emit("setalerts", JSON.stringify({"t": token, "enabled": false}));
     });
 
+
+    //scroll options
+    $('#btnautoscrollon').on('click', function(e) {
+        autoScroll = true;
+        if (storageAvailable('localStorage'))
+            localStorage.setItem("autoScroll", autoScroll);
+    });
+    $('#btnautoscrolloff').on('click', function(e) {
+        autoScroll = false;
+        if (storageAvailable('localStorage'))
+            localStorage.setItem("autoScroll", autoScroll);
+    });
+
     //sound options
     $('#enablesound').on('click', function(e) {
         enableSound = true;
@@ -230,6 +248,7 @@ $(document).ready(function(){
 
     //other buttons
     $("#messages").on('click', '.loadhistory', function(e) {
+        reconnectCount = 0; //set this to 0 so the history is loaded at top of message log instead of the bottom
         var room = $(e.currentTarget).attr("data-room");
         $(e.currentTarget).parent().remove();
         socket.emit("history",JSON.stringify({"t": token, "room": room, "last": 0}));   //request history
@@ -540,8 +559,14 @@ socket.on('history', function(d){
 
     var d=JSON.parse(d);
     var added = 0;
-    for (var i = d.history.length - 1; i >= 0; i--) {
-        added += appendChatMessage(d.history[i].uid,d.room,d.name,d.history[i].nick,d.history[i].m,d.history[i].msgid, d.history[i].avatar,d.history[i].time, 'prepend');
+    if (reconnectCount==0) {
+        for (var i = d.history.length - 1; i >= 0; i--) {
+            added += appendChatMessage(d.history[i].uid,d.room,d.name,d.history[i].nick,d.history[i].m,d.history[i].msgid, d.history[i].avatar,d.history[i].time, 'prepend');
+        }
+    } else {
+        for (var i = 0; i < d.history.length; i++) {
+            added += appendChatMessage(d.history[i].uid,d.room,d.name,d.history[i].nick,d.history[i].m,d.history[i].msgid, d.history[i].avatar,d.history[i].time);
+        }
     }
     updateSidebar();
     if (added>0) {
@@ -664,7 +689,8 @@ function updateSidebar() {
 }
 
 function scrollToBottom() {
-    $(window).scrollTop($('body')[0].scrollHeight);
+    if (autoScroll)
+        $(window).scrollTop($('body')[0].scrollHeight);
 }
 
 function appendSystemMessage(msg, lifetimeMs, cssclass, mode) {

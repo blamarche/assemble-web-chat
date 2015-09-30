@@ -18,5 +18,6 @@ Assemble is a GPLv3, database-less, full featured html chat system meant to be q
 
 ### Development Roadmap [https://github.com/blamarche/assemble-web-chat/wiki]
 
+
 ### Special Thanks
 Thanks goes to Sebastian Kraft for providing public domain smilies: http://opengameart.org/content/cubikopp-qubic-smilies | Other icons/smileys were obtained from openclipart.org and are licensed for public domain.
