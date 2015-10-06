@@ -712,6 +712,20 @@ function appendSystemMessage(msg, lifetimeMs, cssclass, mode) {
     return sm;
 }
 
+/**
+ * Get the value of a querystring - useful for embedded youtube start time
+ * Source: http://gomakethings.com/how-to-get-the-value-of-a-querystring-with-native-javascript/
+ * @param  {String} field The field to get the value of
+ * @param  {String} url   The URL to get the value from (optional)
+ * @return {String}       The field value
+ */
+var getQueryString = function ( field, url ) {
+    var href = url ? url : window.location.href;
+    var reg = new RegExp( '[?&]' + field + '=([^&#]*)', 'i' );
+    var string = reg.exec(href);
+    return string ? string[1] : null;
+};
+
 function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode) {
     if (typeof mode=="undefined") {
         mode="append"; //other option: prefix
@@ -772,9 +786,28 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
                         else if ( match.getUrl().indexOf('youtube.com/watch?v=') !== -1 )
                         {
                             if (noImages)
-                                return "<a href='"+href+"' target='_blank'>"+href+"</a>";
+                              return "<a href='"+href+"' target='_blank'>"+href+"</a>";
 
                             var frame = "<a href='"+href+"' target='_blank'>"+href+"</a><br>"+'<iframe class="autolink'+small+'" height="315" src="'+match.getUrl().replace('youtube.com/watch?v=', 'youtube.com/embed/')+'" frameborder="0" allowfullscreen></iframe>';
+
+                            // Convert youtube url if it contains a query string for start time so embedding works
+                            var embedTime = getQueryString('t', href);
+                            if (embedTime) {
+                              var youtubeV = getQueryString('v', href);
+                              var strmins = embedTime.slice(0, embedTime.indexOf("m"));
+                              var youtubeMinutes = parseInt(strmins,10);
+                              if (embedTime.indexOf("m") !== -1) {
+                                // time includes minutes, split string to work on seconds
+                                embedTime = embedTime.split('m')[1];
+                              } else {
+                                youtubeMinutes = 0;
+                              }
+                              var strsecs = embedTime.slice(0, embedTime.indexOf("s"));
+                              var youtubeSeconds = parseInt(strsecs, 10);
+                              var youtubeT = youtubeMinutes*60 + youtubeSeconds;
+
+                              frame = "<a href='"+href+"' target='_blank'>"+href+"</a><br>"+'<iframe class="autolink'+small+'" height="315" src="//www.youtube.com/embed/'+youtubeV+'?start='+youtubeT+'"frameborder="0" allowfullscreen></iframe>';
+                            }
                             return frame;
                         }
                         else if ( match.getUrl().indexOf('youtu.be/') !== -1 )
@@ -783,6 +816,28 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
                                 return "<a href='"+href+"' target='_blank'>"+href+"</a>";
 
                             var frame = "<a href='"+href+"' target='_blank'>"+href+"</a><br>"+'<iframe class="autolink'+small+'" height="315" src="'+match.getUrl().replace('youtu.be/', 'youtube.com/embed/')+'" frameborder="0" allowfullscreen></iframe>';
+
+                            // Convert youtube url if it contains a query string for start time so embedding works
+                            var embedTime = getQueryString('t', href);
+                            if (embedTime) {
+                              // Get the embed code between '/' and '?
+                              var youtubeV = href.split('?')[0];
+                              youtubeV = youtubeV.split('/');
+                              youtubeV = youtubeV.slice(-1)[0]
+                              var strmins = embedTime.slice(0, embedTime.indexOf("m"));
+                              var youtubeMinutes = parseInt(strmins,10);
+                              if (embedTime.indexOf("m") !== -1) {
+                                // time includes minutes, split string to work on seconds
+                                embedTime = embedTime.split('m')[1];
+                              } else {
+                                youtubeMinutes = 0;
+                              }
+                              var strsecs = embedTime.slice(0, embedTime.indexOf("s"));
+                              var youtubeSeconds = parseInt(strsecs, 10);
+                              var youtubeT = youtubeMinutes*60 + youtubeSeconds;
+
+                              frame = "<a href='"+href+"' target='_blank'>"+href+"</a><br>"+'<iframe class="autolink'+small+'" height="315" src="//www.youtube.com/embed/'+youtubeV+'?start='+youtubeT+'"frameborder="0" allowfullscreen></iframe>';
+                            }
                             return frame;
                         }
                         break;
