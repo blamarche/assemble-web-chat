@@ -92,12 +92,19 @@ $(document).ready(function(){
         updateSidebar();
     });
 
-    // Adjust #messages margin-bottom when the height of the message textbox changes
-    // This prevents the textarea from covering lower messages
-    $("textarea#m").mousemove(function(e) {
-      $("#messages").css("margin-bottom", $("textarea#m").height()+20 );
-      $('html, body').scrollTop( $(document).height() - $(window).height() ); // Scroll to bottom
-    });
+    // Adjust #messages margin-bottom when the height of the message textbox changes.
+    // This prevents the textarea from covering lower messages.
+    // Adapted from MoonLite: http://stackoverflow.com/a/16848663
+    $('textarea#m').bind('mouseup mousemove',function(){
+            if (this.oldheight === null) {
+              this.oldheight = this.style.height;
+            }
+            if (this.style.height != this.oldheight) {
+              $('#messages').css('margin-bottom', $(this).height()+20);
+              $('html, body').scrollTop( $(document).height() - $(window).height() ); // Scroll to bottom
+              this.oldheight = this.style.height;
+            }
+        });
 
     $ ( window ).on('keydown', function(ev) {
         if (ev.keyCode == 40 && ev.ctrlKey) { //down
