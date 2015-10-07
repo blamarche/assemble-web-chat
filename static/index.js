@@ -454,8 +454,16 @@ $("#btnroomusers").on('click', function() {
 
 socket.on('chatm', function(d){
     d=JSON.parse(d);
+    // If scrolled to bottom already, scroll to bottom again after appending message
+    var atBottom = false;
+    if($(window).scrollTop() + $(window).height() == $(document).height()) {
+      atBottom = true;
+    }
     appendChatMessage(d.uid,d.room,d.name,d.nick,d.m,d.msgid,d.avatar,d.time);
-    scrollToBottom();
+    if (atBottom) {
+      scrollToBottom();
+    }
+
     if ($("#m").prop('disabled')==true) {
         $("#m").prop('disabled', false);
         $("#m").focus();
