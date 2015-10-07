@@ -92,6 +92,13 @@ $(document).ready(function(){
         updateSidebar();
     });
 
+    // Adjust #messages margin-bottom when the height of the message textbox changes
+    // This prevents the textarea from covering lower messages
+    $("textarea#m").mousemove(function(e) {
+      $("#messages").css("margin-bottom", $("textarea#m").height()+20 );
+      $('html, body').scrollTop( $(document).height() - $(window).height() ); // Scroll to bottom
+    });
+
     $ ( window ).on('keydown', function(ev) {
         if (ev.keyCode == 40 && ev.ctrlKey) { //down
             var troom = $("#sidebar li[data-room='"+cur_room+"']").next().attr("data-room");
