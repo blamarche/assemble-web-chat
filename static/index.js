@@ -305,7 +305,7 @@ $(document).ready(function(){
     });
 
     $("#clearbtn").on('click', function() {
-      $("#messages").html("");
+      $("#messages li").addClass("hidden");
     });
 
     $("#sendmessage").on('click', function(e) {
