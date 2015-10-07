@@ -106,6 +106,9 @@ $(document).ready(function(){
             }
         });
 
+    // Allow modals to be closed with the Esc key
+    $('.modal').attr('tabindex','-1');
+
     $ ( window ).on('keydown', function(ev) {
         if (ev.keyCode == 40 && ev.ctrlKey) { //down
             var troom = $("#sidebar li[data-room='"+cur_room+"']").next().attr("data-room");
