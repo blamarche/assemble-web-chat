@@ -304,6 +304,10 @@ $(document).ready(function(){
         $("#createroom .roomname").val("");
     });
 
+    $("#clearbtn").on('click', function() {
+      $("#messages").html("");
+    });
+
     $("#sendmessage").on('click', function(e) {
         var uid = $(e.currentTarget).attr("data-uid");
         switchOnJoin=true;
