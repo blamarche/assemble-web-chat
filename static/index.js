@@ -92,6 +92,27 @@ $(document).ready(function(){
         updateSidebar();
     });
 
+    // Adjust #messages margin-bottom when the height of the message textbox changes.
+    // This prevents the textarea from covering lower messages.
+    // Adapted from MoonLite: http://stackoverflow.com/a/16848663
+    $('textarea#m').bind('mouseup mousemove',function(){
+            if (this.oldheight === null) {
+              this.oldheight = this.style.height;
+            }
+            if (this.style.height != this.oldheight) {
+              $('#messages').css('margin-bottom', $(this).height()+20);
+              $('html, body').scrollTop( $(document).height() - $(window).height() ); // Scroll to bottom
+              this.oldheight = this.style.height;
+            }
+        });
+
+    // If the window has scrolled to the bottom, hide the new message indicator
+    $(window).scroll(function() {
+      if($(window).scrollTop() + $(window).height() == $(document).height()) {
+            $("#iconNewMsg").addClass("hidden");
+      }
+    });
+
     $ ( window ).on('keydown', function(ev) {
         if (ev.keyCode == 40 && ev.ctrlKey) { //down
             var troom = $("#sidebar li[data-room='"+cur_room+"']").next().attr("data-room");
@@ -290,6 +311,10 @@ $(document).ready(function(){
         $("#createroom .roomname").val("");
     });
 
+    $("#clearbtn").on('click', function() {
+      $("#messages li[data-room='"+cur_room+"']").addClass("hidden");
+    });
+
     $("#sendmessage").on('click', function(e) {
         var uid = $(e.currentTarget).attr("data-uid");
         switchOnJoin=true;
@@ -437,7 +462,7 @@ $("#btnroomusers").on('click', function() {
 socket.on('chatm', function(d){
     d=JSON.parse(d);
     appendChatMessage(d.uid,d.room,d.name,d.nick,d.m,d.msgid,d.avatar,d.time);
-    scrollToBottom();
+
     if ($("#m").prop('disabled')==true) {
         $("#m").prop('disabled', false);
         $("#m").focus();
@@ -494,7 +519,6 @@ socket.on('inviteusertoroom', function(d) {
     m+="<a class='joinroom' data-room='"+d.room+"'>"+d.name+"</a>";
     m+="<div class='clearfloat'></div>";
     appendSystemMessage(m, 0);
-    scrollToBottom();
 });
 
 socket.on('userinfo', function(d) {
@@ -525,7 +549,6 @@ socket.on('roomusers', function(d) {
     m+="<div class='clearfloat'></div>";
     $('#messages li.userlist').slideUp(500);
     appendSystemMessage(m,0,'userlist');
-    scrollToBottom();
 });
 
 socket.on('onlineusers', function(d) {
@@ -537,7 +560,6 @@ socket.on('onlineusers', function(d) {
     m+="<div class='clearfloat'></div>";
     $('#messages li.userlist').slideUp(500);
     appendSystemMessage(m,0,'userlist');
-    scrollToBottom();
 });
 
 socket.on('roomlist', function(d){
@@ -549,7 +571,6 @@ socket.on('roomlist', function(d){
     m+="<div class='clearfloat'></div>";
     $('#messages li.roomlist').slideUp(500);
     appendSystemMessage(m, 0, 'roomlist');
-    scrollToBottom();
 });
 
 socket.on('history', function(d){
@@ -575,7 +596,6 @@ socket.on('history', function(d){
         if (d.room!=cur_room)
             hiddenclass="hidden";
         appendSystemMessage("<a class='loadhistory' data-room='"+d.room+"'>Load more history...</a>",0, "chatmsg", 'prepend').removeClass("sysmsg").addClass(hiddenclass).attr('data-room', d.room);
-        scrollToBottom();
     }
 });
 
@@ -700,6 +720,12 @@ function appendSystemMessage(msg, lifetimeMs, cssclass, mode) {
         mode="append"; //or prepend
 
     var sm = $('<li>').addClass("sysmsg").addClass(cssclass).html(msg);
+
+    // If scrolled to bottom already, scroll to bottom again after appending message
+    var atBottom = false;
+    if($(window).scrollTop() + $(window).height() == $(document).height()) {
+      atBottom = true;
+    }
     if (mode=="append")
         $('#messages').append(sm);
     if (mode=='prepend')
@@ -709,8 +735,28 @@ function appendSystemMessage(msg, lifetimeMs, cssclass, mode) {
             sm.slideUp(1000);
         }, lifetimeMs);
     }
+    if (atBottom) {
+      scrollToBottom();
+    } else {
+      $('#iconNewMsg').removeClass("hidden");
+    }
+
     return sm;
 }
+
+/**
+ * Get the value of a querystring - useful for embedded youtube start time
+ * Source: http://gomakethings.com/how-to-get-the-value-of-a-querystring-with-native-javascript/
+ * @param  {String} field The field to get the value of
+ * @param  {String} url   The URL to get the value from (optional)
+ * @return {String}       The field value
+ */
+var getQueryString = function ( field, url ) {
+    var href = url ? url : window.location.href;
+    var reg = new RegExp( '[?&]' + field + '=([^&#]*)', 'i' );
+    var string = reg.exec(href);
+    return string ? string[1] : null;
+};
 
 function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode) {
     if (typeof mode=="undefined") {
@@ -772,9 +818,28 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
                         else if ( match.getUrl().indexOf('youtube.com/watch?v=') !== -1 )
                         {
                             if (noImages)
-                                return "<a href='"+href+"' target='_blank'>"+href+"</a>";
+                              return "<a href='"+href+"' target='_blank'>"+href+"</a>";
 
                             var frame = "<a href='"+href+"' target='_blank'>"+href+"</a><br>"+'<iframe class="autolink'+small+'" height="315" src="'+match.getUrl().replace('youtube.com/watch?v=', 'youtube.com/embed/')+'" frameborder="0" allowfullscreen></iframe>';
+
+                            // Convert youtube url if it contains a query string for start time so embedding works
+                            var embedTime = getQueryString('t', href);
+                            if (embedTime) {
+                              var youtubeV = getQueryString('v', href);
+                              var strmins = embedTime.slice(0, embedTime.indexOf("m"));
+                              var youtubeMinutes = parseInt(strmins,10);
+                              if (embedTime.indexOf("m") !== -1) {
+                                // time includes minutes, split string to work on seconds
+                                embedTime = embedTime.split('m')[1];
+                              } else {
+                                youtubeMinutes = 0;
+                              }
+                              var strsecs = embedTime.slice(0, embedTime.indexOf("s"));
+                              var youtubeSeconds = parseInt(strsecs, 10);
+                              var youtubeT = youtubeMinutes*60 + youtubeSeconds;
+
+                              frame = "<a href='"+href+"' target='_blank'>"+href+"</a><br>"+'<iframe class="autolink'+small+'" height="315" src="//www.youtube.com/embed/'+youtubeV+'?start='+youtubeT+'"frameborder="0" allowfullscreen></iframe>';
+                            }
                             return frame;
                         }
                         else if ( match.getUrl().indexOf('youtu.be/') !== -1 )
@@ -783,6 +848,28 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
                                 return "<a href='"+href+"' target='_blank'>"+href+"</a>";
 
                             var frame = "<a href='"+href+"' target='_blank'>"+href+"</a><br>"+'<iframe class="autolink'+small+'" height="315" src="'+match.getUrl().replace('youtu.be/', 'youtube.com/embed/')+'" frameborder="0" allowfullscreen></iframe>';
+
+                            // Convert youtube url if it contains a query string for start time so embedding works
+                            var embedTime = getQueryString('t', href);
+                            if (embedTime) {
+                              // Get the embed code between '/' and '?
+                              var youtubeV = href.split('?')[0];
+                              youtubeV = youtubeV.split('/');
+                              youtubeV = youtubeV.slice(-1)[0]
+                              var strmins = embedTime.slice(0, embedTime.indexOf("m"));
+                              var youtubeMinutes = parseInt(strmins,10);
+                              if (embedTime.indexOf("m") !== -1) {
+                                // time includes minutes, split string to work on seconds
+                                embedTime = embedTime.split('m')[1];
+                              } else {
+                                youtubeMinutes = 0;
+                              }
+                              var strsecs = embedTime.slice(0, embedTime.indexOf("s"));
+                              var youtubeSeconds = parseInt(strsecs, 10);
+                              var youtubeT = youtubeMinutes*60 + youtubeSeconds;
+
+                              frame = "<a href='"+href+"' target='_blank'>"+href+"</a><br>"+'<iframe class="autolink'+small+'" height="315" src="//www.youtube.com/embed/'+youtubeV+'?start='+youtubeT+'"frameborder="0" allowfullscreen></iframe>';
+                            }
                             return frame;
                         }
                         break;
@@ -833,10 +920,22 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
         return false;
     }
 
+    // If scrolled to bottom already, scroll to bottom again after appending message
+    var atBottom = false;
+    if($(window).scrollTop() + $(window).height() == $(document).height()) {
+      atBottom = true;
+    }
+
     if (mode=="append")
         $('#messages').append(msgli);
     else if (mode=="prepend")
         $('#messages').prepend(msgli);
+
+    if (atBottom) {
+      scrollToBottom();
+    } else {
+      $('#iconNewMsg').removeClass("hidden");
+    }
 
     return 1;
 }
@@ -877,7 +976,6 @@ function switchRoom(room) {
     rooms[cur_room].mcount = 0;
 
     updateSidebar();
-    scrollToBottom();
     $("#m").focus();
 }
 
