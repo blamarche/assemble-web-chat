@@ -305,7 +305,7 @@ $(document).ready(function(){
     });
 
     $("#clearbtn").on('click', function() {
-      $("#messages li").addClass("hidden");
+      $("#messages li[data-room='"+cur_room+"']").addClass("hidden");
     });
 
     $("#sendmessage").on('click', function(e) {
@@ -512,7 +512,6 @@ socket.on('inviteusertoroom', function(d) {
     m+="<a class='joinroom' data-room='"+d.room+"'>"+d.name+"</a>";
     m+="<div class='clearfloat'></div>";
     appendSystemMessage(m, 0);
-    scrollToBottom();
 });
 
 socket.on('userinfo', function(d) {
@@ -543,7 +542,6 @@ socket.on('roomusers', function(d) {
     m+="<div class='clearfloat'></div>";
     $('#messages li.userlist').slideUp(500);
     appendSystemMessage(m,0,'userlist');
-    scrollToBottom();
 });
 
 socket.on('onlineusers', function(d) {
@@ -555,7 +553,6 @@ socket.on('onlineusers', function(d) {
     m+="<div class='clearfloat'></div>";
     $('#messages li.userlist').slideUp(500);
     appendSystemMessage(m,0,'userlist');
-    scrollToBottom();
 });
 
 socket.on('roomlist', function(d){
@@ -567,7 +564,6 @@ socket.on('roomlist', function(d){
     m+="<div class='clearfloat'></div>";
     $('#messages li.roomlist').slideUp(500);
     appendSystemMessage(m, 0, 'roomlist');
-    scrollToBottom();
 });
 
 socket.on('history', function(d){
@@ -593,7 +589,6 @@ socket.on('history', function(d){
         if (d.room!=cur_room)
             hiddenclass="hidden";
         appendSystemMessage("<a class='loadhistory' data-room='"+d.room+"'>Load more history...</a>",0, "chatmsg", 'prepend').removeClass("sysmsg").addClass(hiddenclass).attr('data-room', d.room);
-        scrollToBottom();
     }
 });
 
@@ -969,7 +964,6 @@ function switchRoom(room) {
     rooms[cur_room].mcount = 0;
 
     updateSidebar();
-    scrollToBottom();
     $("#m").focus();
 }
 
