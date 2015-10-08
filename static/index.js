@@ -106,6 +106,13 @@ $(document).ready(function(){
             }
         });
 
+    // If the window has scrolled to the bottom, hide the new message indicator
+    $(window).scroll(function() {
+      if($(window).scrollTop() + $(window).height() == $(document).height()) {
+            $("#iconNewMsg").addClass("hidden");
+      }
+    });
+
     $ ( window ).on('keydown', function(ev) {
         if (ev.keyCode == 40 && ev.ctrlKey) { //down
             var troom = $("#sidebar li[data-room='"+cur_room+"']").next().attr("data-room");
@@ -730,7 +737,10 @@ function appendSystemMessage(msg, lifetimeMs, cssclass, mode) {
     }
     if (atBottom) {
       scrollToBottom();
+    } else {
+      $('#iconNewMsg').removeClass("hidden");
     }
+
     return sm;
 }
 
@@ -923,6 +933,8 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
 
     if (atBottom) {
       scrollToBottom();
+    } else {
+      $('#iconNewMsg').removeClass("hidden");
     }
 
     return 1;

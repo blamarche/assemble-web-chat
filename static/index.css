@@ -183,3 +183,5 @@ span.avatar {
 
 .hidden { display: none; }
 .clearfloat { clear: both; float: none !important;}
+
+#iconNewMsg { color: rgba(0,210,0,0.75); font-size: 3em; position: fixed; right: 2px; bottom: 38px; }
