@@ -454,15 +454,7 @@ $("#btnroomusers").on('click', function() {
 
 socket.on('chatm', function(d){
     d=JSON.parse(d);
-    // If scrolled to bottom already, scroll to bottom again after appending message
-    var atBottom = false;
-    if($(window).scrollTop() + $(window).height() == $(document).height()) {
-      atBottom = true;
-    }
     appendChatMessage(d.uid,d.room,d.name,d.nick,d.m,d.msgid,d.avatar,d.time);
-    if (atBottom) {
-      scrollToBottom();
-    }
 
     if ($("#m").prop('disabled')==true) {
         $("#m").prop('disabled', false);
@@ -726,6 +718,12 @@ function appendSystemMessage(msg, lifetimeMs, cssclass, mode) {
         mode="append"; //or prepend
 
     var sm = $('<li>').addClass("sysmsg").addClass(cssclass).html(msg);
+
+    // If scrolled to bottom already, scroll to bottom again after appending message
+    var atBottom = false;
+    if($(window).scrollTop() + $(window).height() == $(document).height()) {
+      atBottom = true;
+    }
     if (mode=="append")
         $('#messages').append(sm);
     if (mode=='prepend')
@@ -734,6 +732,9 @@ function appendSystemMessage(msg, lifetimeMs, cssclass, mode) {
         setTimeout(function(){
             sm.slideUp(1000);
         }, lifetimeMs);
+    }
+    if (atBottom) {
+      scrollToBottom();
     }
     return sm;
 }
@@ -914,10 +915,20 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
         return false;
     }
 
+    // If scrolled to bottom already, scroll to bottom again after appending message
+    var atBottom = false;
+    if($(window).scrollTop() + $(window).height() == $(document).height()) {
+      atBottom = true;
+    }
+
     if (mode=="append")
         $('#messages').append(msgli);
     else if (mode=="prepend")
         $('#messages').prepend(msgli);
+
+    if (atBottom) {
+      scrollToBottom();
+    }
 
     return 1;
 }
