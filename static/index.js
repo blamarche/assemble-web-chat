@@ -977,6 +977,7 @@ function switchRoom(room) {
 
     updateSidebar();
     $("#m").focus();
+    scrollToBottom();
 }
 
 function switchRoomByName(roomname) {
