@@ -313,6 +313,7 @@ $(document).ready(function(){
 
     $("#clearbtn").on('click', function() {
       $("#messages li[data-room='"+cur_room+"']").addClass("hidden");
+      scrollToBottom();
     });
 
     $("#sendmessage").on('click', function(e) {
