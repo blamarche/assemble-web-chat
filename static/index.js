@@ -815,7 +815,7 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
 
                             return "<a href='"+href+"' target='_blank'>"+href+"</a><br><video controls class='autolink"+small+"'+small+''><source src='"+href+"'></video>";
                         }
-                        else if ( match.getUrl().indexOf('youtube.com/watch?v=') !== -1 )
+                        else if ( match.getUrl().indexOf('youtube.com/watch?') !== -1 )
                         {
                             if (noImages)
                               return "<a href='"+href+"' target='_blank'>"+href+"</a>";
