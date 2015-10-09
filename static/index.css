@@ -76,8 +76,7 @@ form.msg .glyphicon img { width: 20px; margin-top: -4px; }
 }
 #messages li .userprofilelink { cursor: pointer; }
 #messages li a.autolink {}
-#messages li video.autolink, #messages li iframe.autolink { max-width: 512px; }
-#messages li img.autolink { max-width:100%; }
+#messages li img.autolink, #messages li video.autolink, #messages li iframe.autolink { max-width: 512px; }
 #messages li video.autolink, #messages li iframe.autolink { padding: 3px; border: 3px solid #0a5; }
 /* small images override class, needs to be below any other messages img */
 #messages li .messagetext img, #messages li .messagetext video, #messages li .messagetext iframe { cursor: zoom-out; }

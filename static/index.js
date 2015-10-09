@@ -816,7 +816,7 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
                                 return "<a href='"+href+"' target='_blank'>"+href+"</a>";
 
                             var gifvFix = href.replace('.gifv', '.webm');
-                            return "<a href='"+href+"' target='_blank'>"+href+"</a><br><video controls class='autolink "+small+"' loop autoplay muted preload='auto'><source src='"+gifvFix+"'></video>";
+                            return "<a href='"+href+"' target='_blank'>"+href+"</a><br><video controls class='autolink "+small+"'><source src='"+gifvFix+"'></video>";
                         }
                         else if ( match.getUrl().indexOf('youtube.com/watch?') !== -1 )
                         {
