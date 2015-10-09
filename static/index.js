@@ -799,7 +799,7 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
                         if ( match.getUrl().indexOf( '.jpg' ) !== -1 ||
                              match.getUrl().indexOf( '.jpeg' ) !== -1 ||
                              match.getUrl().indexOf( '.png' ) !== -1 ||
-                             match.getUrl().indexOf( '.gif' ) !== -1  )
+                             (match.getUrl().indexOf( '.gif' ) !== -1 && match.getUrl().indexOf( '.gifv' ) === -1) ) // contains gif, not gifv
                         {
                             if (noImages)
                                 return "<a href='"+href+"' target='_blank'>"+href+"</a>";
@@ -808,12 +808,14 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
                         }
                         else if ( match.getUrl().indexOf( '.mp4' ) !== -1 ||
                              match.getUrl().indexOf( '.ogg' ) !== -1 ||
-                             match.getUrl().indexOf( '.webm' ) !== -1 )
+                             match.getUrl().indexOf( '.webm' ) !== -1 ||
+                             match.getUrl().indexOf( '.gifv' ) !== -1)
                         {
                             if (noImages)
                                 return "<a href='"+href+"' target='_blank'>"+href+"</a>";
 
-                            return "<a href='"+href+"' target='_blank'>"+href+"</a><br><video controls class='autolink"+small+"'+small+''><source src='"+href+"'></video>";
+                            var gifvFix = href.replace('.gifv', '.webm');
+                            return "<a href='"+href+"' target='_blank'>"+href+"</a><br><video controls class='autolink "+small+"' loop autoplay muted preload='auto'><source src='"+gifvFix+"'></video>";
                         }
                         else if ( match.getUrl().indexOf('youtube.com/watch?') !== -1 )
                         {
