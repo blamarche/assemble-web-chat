@@ -637,7 +637,7 @@ socket.on('join', function(d){
 
 socket.on('joined', function(d){
     var d=JSON.parse(d);
-    appendSystemMessage(d.nick +" joined "+d.name, 3000);
+    //appendSystemMessage(d.nick +" joined "+d.name, 3000);
     rooms[d.room].users.push({uid:d.uid, nick:d.nick});
 });
 
