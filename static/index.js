@@ -166,6 +166,11 @@ $(document).ready(function(){
         $("#imgupFile").click();
     });
 
+    //new message indicator
+    $("#iconNewMsg").on('click',function() {
+        scrollToBottom();
+    });
+
     sendPing();
     function sendPing() {
         socket.emit("ping", JSON.stringify({"t": token}));
@@ -646,7 +651,7 @@ socket.on('auth_error', function(d){
 });
 
 socket.on('auth', function(d){
-    appendSystemMessage("Logged in successfully",3000);
+    //appendSystemMessage("Logged in successfully",3000);
 });
 
 socket.on('invitenewuser', function(d){
@@ -976,6 +981,7 @@ function switchRoom(room) {
     rooms[cur_room].mcount = 0;
 
     updateSidebar();
+    scrollToBottom();
     $("#m").focus();
 }
 

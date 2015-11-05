@@ -27,9 +27,11 @@ type Room struct {
 	FriendlyName  string
 	RoomID        string
 	IsPrivate     bool
+	IsDirect      bool
 	CreatorUID    string
 	MemberUIDs    map[string]string
 	InvitedUIDs   map[string]string
+	DirectUIDs    map[string]string
 	MaxExpTime    time.Duration
 	MinExpTime    time.Duration
 	Avatar        string
