@@ -565,8 +565,9 @@ func socketHandlers(so socketio.Socket) {
 		g.SetP(service.Users[uid].Token.Path("avatar").Data().(string), "avatar")
 
 		if len(g.Path("m").Data().(string)) > 4096 {
-			so.Emit("auth_error", "Message is too long. Must be less than 4096 characters")
-			return
+			//TODO add exception for data image uris
+			//so.Emit("auth_error", "Message is too long. Must be less than 4096 characters")
+			//return
 		}
 		g.SetP(html.EscapeString(g.Path("m").Data().(string)), "m")
 
