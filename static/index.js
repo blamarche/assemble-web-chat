@@ -324,19 +324,17 @@ $(document).ready(function(){
     containerOne = document.getElementsByClassName('literally one')[0];
     $('#literallycanvasbtn').on('click', function(e) {
         $('#literallycanvas').modal();
+        if (!lc) {
+          lc = LC.init(containerOne, {
+            imageSize: {width:507, height:null}
+          });
+        }
     });
     $('#literallypost').on('click', function(e) {
       e.preventDefault();
       var pngString = lc.getImage().toDataURL();
       socket.emit('chatm', JSON.stringify({"t": token, "room": cur_room, "m": pngString, "dur":cur_dur}));
       $('#literallycanvas').modal('hide');
-    });
-    $(document).on('shown.bs.modal','#literallycanvas', function(){
-      if (!lc) {
-        lc = LC.init(containerOne, {
-          imageSize: {width:500, height:400}
-        });
-      }
     });
 
     $("#sendmessage").on('click', function(e) {
