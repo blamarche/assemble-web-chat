@@ -85,8 +85,6 @@ socket.io.on('reconnect_error', function(e) {
     console.log(e);
 });
 
-
-
 $(document).ready(function(){
     $( window ).resize(function() {
         updateSidebar();
@@ -321,19 +319,24 @@ $(document).ready(function(){
     });
 
     //Paint panel with Literally Canvas - http://literallycanvas.com/
+    LC.setDefaultImageURLPrefix('/literallycanvas/img');
+    var lc = null;
+    containerOne = document.getElementsByClassName('literally one')[0];
     $('#literallycanvasbtn').on('click', function(e) {
         $('#literallycanvas').modal();
-        var lc = LC.init(
-            document.getElementsByClassName('literally')[0],
-            {imageURLPrefix: '/literallycanvas/img'}
-        );
-        $('#literallypost').on('click', function(e) {
-          // e.preventDefault();
-          var svgString = lc.getSVGString();
-          socket.emit('chatm', JSON.stringify({"t": token, "room": cur_room, "m": "data:image/svg+xml;base64,"+btoa(svgString), "dur":cur_dur}));
-          $('#literallycanvas').modal('hide');
-
+    });
+    $('#literallypost').on('click', function(e) {
+      e.preventDefault();
+      var pngString = lc.getImage().toDataURL();
+      socket.emit('chatm', JSON.stringify({"t": token, "room": cur_room, "m": pngString, "dur":cur_dur}));
+      $('#literallycanvas').modal('hide');
+    });
+    $(document).on('shown.bs.modal','#literallycanvas', function(){
+      if (!lc) {
+        lc = LC.init(containerOne, {
+          imageSize: {width:500, height:400}
         });
+      }
     });
 
     $("#sendmessage").on('click', function(e) {
