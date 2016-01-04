@@ -135,7 +135,7 @@ $(document).ready(function(){
         }
     });
 
-    for (var x in icon_lib) { //its okk that these double. it'll only load once anyway
+    for (var x in icon_lib) { //its ok that these double. it'll only load once anyway
         var ic=$("<img>").attr("src","/icons/"+icon_lib[x]).attr("title", x);
         $("#iconPreload").append(ic);
         if (x.indexOf("(")==0) {
@@ -164,6 +164,11 @@ $(document).ready(function(){
     });
     $("#imgup").on('click',function() {
         $("#imgupFile").click();
+    });
+
+    //new message indicator
+    $("#iconNewMsg").on('click',function() {
+        scrollToBottom();
     });
 
     sendPing();
@@ -313,7 +318,22 @@ $(document).ready(function(){
 
     $("#clearbtn").on('click', function() {
       $("#messages li[data-room='"+cur_room+"']").addClass("hidden");
-      scrollToBottom();
+    });
+
+    //Paint panel with Literally Canvas - http://literallycanvas.com/
+    $('#literallycanvasbtn').on('click', function(e) {
+        $('#literallycanvas').modal();
+        var lc = LC.init(
+            document.getElementsByClassName('literally')[0],
+            {imageURLPrefix: '/literallycanvas/img'}
+        );
+        $('#literallypost').on('click', function(e) {
+          // e.preventDefault();
+          var svgString = lc.getSVGString();
+          socket.emit('chatm', JSON.stringify({"t": token, "room": cur_room, "m": "data:image/svg+xml;base64,"+btoa(svgString), "dur":cur_dur}));
+          $('#literallycanvas').modal('hide');
+
+        });
     });
 
     $("#sendmessage").on('click', function(e) {
@@ -633,7 +653,7 @@ socket.on('join', function(d){
 
 socket.on('joined', function(d){
     var d=JSON.parse(d);
-    appendSystemMessage(d.nick +" joined "+d.name, 3000);
+    //appendSystemMessage(d.nick +" joined "+d.name, 3000);
     rooms[d.room].users.push({uid:d.uid, nick:d.nick});
 });
 
@@ -647,7 +667,7 @@ socket.on('auth_error', function(d){
 });
 
 socket.on('auth', function(d){
-    appendSystemMessage("Logged in successfully",3000);
+    //appendSystemMessage("Logged in successfully",3000);
 });
 
 socket.on('invitenewuser', function(d){
@@ -800,7 +820,7 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
                         if ( match.getUrl().indexOf( '.jpg' ) !== -1 ||
                              match.getUrl().indexOf( '.jpeg' ) !== -1 ||
                              match.getUrl().indexOf( '.png' ) !== -1 ||
-                             (match.getUrl().indexOf( '.gif' ) !== -1 && match.getUrl().indexOf( '.gifv' ) === -1) ) // contains gif, not gifv
+                             match.getUrl().indexOf( '.gif' ) !== -1  )
                         {
                             if (noImages)
                                 return "<a href='"+href+"' target='_blank'>"+href+"</a>";
@@ -809,16 +829,14 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
                         }
                         else if ( match.getUrl().indexOf( '.mp4' ) !== -1 ||
                              match.getUrl().indexOf( '.ogg' ) !== -1 ||
-                             match.getUrl().indexOf( '.webm' ) !== -1 ||
-                             match.getUrl().indexOf( '.gifv' ) !== -1)
+                             match.getUrl().indexOf( '.webm' ) !== -1 )
                         {
                             if (noImages)
                                 return "<a href='"+href+"' target='_blank'>"+href+"</a>";
 
-                            var gifvFix = href.replace('.gifv', '.webm');
-                            return "<a href='"+href+"' target='_blank'>"+href+"</a><br><video controls class='autolink "+small+"'><source src='"+gifvFix+"'></video>";
+                            return "<a href='"+href+"' target='_blank'>"+href+"</a><br><video controls class='autolink"+small+"'+small+''><source src='"+href+"'></video>";
                         }
-                        else if ( match.getUrl().indexOf('youtube.com/watch?') !== -1 )
+                        else if ( match.getUrl().indexOf('youtube.com/watch?v=') !== -1 )
                         {
                             if (noImages)
                               return "<a href='"+href+"' target='_blank'>"+href+"</a>";
@@ -979,8 +997,8 @@ function switchRoom(room) {
     rooms[cur_room].mcount = 0;
 
     updateSidebar();
-    $("#m").focus();
     scrollToBottom();
+    $("#m").focus();
 }
 
 function switchRoomByName(roomname) {

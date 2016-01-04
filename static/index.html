@@ -46,12 +46,15 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
     <meta name="theme-color" content="#ffffff">
 
     <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/literallycanvas/css/literallycanvas.css" rel="stylesheet">
     <link href="/index.css" rel="stylesheet">
 
     <script src="/socket.io.js"></script>
     <script src="/jquery-1.11.1.js"></script>
     <script src="/Autolinker.min.js"></script>
     <script src="/dropzone.js"></script>
+    <script src="/react-with-addons.js"></script>
+    <script src="/literallycanvas/js/literallycanvas.min.js"></script>
     <script>
     Dropzone.autoDiscover = false;
     </script>
@@ -79,13 +82,13 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
                     <div class="clearfloat"></div>
                 </li>
             </ul>
-            <ul id="messages"><li class="sysmsg">Assemble Web Chat is open source software. Check it out on <a href="https://github.com/blamarche/assemble-web-chat">Github</a></li></ul>
+            <ul id="messages"></ul>
         </div>
 
         <form action="" class="msg">
           <div class="row">
-              <div class="col-xs-8">
-                <textarea id="m" autocomplete="off" ></textarea>
+              <div class="col-xs-7">
+                <textarea id="m"></textarea>
               </div>
 
               <div class="col-xs-1">
@@ -100,11 +103,15 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
               </div>
 
               <div class="col-xs-1">
+                <button id="literallycanvasbtn" class="btn btn-danger"><span class="glyphicon glyphicon-picture" aria-hidden="true"></span></button>
+              </div>
+
+              <div class="col-xs-1">
                 <span id="iconbtn" class="btn btn-info" data-target="#iconselect" data-toggle="modal"><span class="glyphicon" aria-hidden="true"><img src="/icons/smile.svg"/></span></span>
               </div>
 
               <div class="col-xs-1">
-                <button id="clearbtn" class="btn btn-danger"><span class="glyphicon glyphicon-erase" aria-hidden="true"></span></button>
+                <button id="clearbtn" class="btn btn-warning"><span class="glyphicon glyphicon-erase" aria-hidden="true"></span></button>
               </div>
           </div>
         </form>
@@ -216,6 +223,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
                         <button id="btnupdateprofile" type="button" class="btn btn-primary" data-dismiss="modal">Update Profile (Nickname, Avatar, etc...)</button>
                     </div>
                 </form>
+                <div class="oss">Assemble Web Chat is open source software. Check it out on <a href="https://github.com/blamarche/assemble-web-chat">Github</a></div>
               </div>
             </div><!-- /.modal-content -->
           </div><!-- /.modal-dialog -->
@@ -272,7 +280,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
               </div>
               <div class="modal-body">
                   <button id="btnleaveroom" data-dismiss="modal" class="btn btn-danger">Leave Room</button>
-                  <button id="btnhideroom" data-dismiss="modal" class="btn btn-warning">Hide Room</button>
+                  <!-- <button id="btnhideroom" data-dismiss="modal" class="btn btn-warning">Hide Room</button> -->
               </div>
             </div><!-- /.modal-content -->
           </div><!-- /.modal-dialog -->
@@ -331,6 +339,26 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
                               <li><span class="glyphicon glyphicon-cog"></span> - Open the options screen</li>
                           </ul>
                   </div>
+              </div>
+            </div><!-- /.modal-content -->
+          </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
+
+        <div id="literallycanvas" class="modal" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Paint Canvas</h4>
+              </div>
+              <div class="modal-body">
+                  <div class="row">
+                      <div class="literally"></div>
+                  </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                <button id="literallypost" type="button" class="btn btn-success">Post</button>
               </div>
             </div><!-- /.modal-content -->
           </div><!-- /.modal-dialog -->

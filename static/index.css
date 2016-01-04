@@ -17,6 +17,8 @@ a { cursor: pointer; }
 #firstTime p { font-size: 16px; }
 #firstTime li { font-size: 15px; list-style-type: none; padding: 5px; }
 
+.oss {font-weight:bold;}
+
 .row { margin-left:0; margin-right:0; }
 form.msg { background: #000; padding: 3px; position: fixed; bottom: 0; left: 0; width: 100%; }
 form.msg div { padding-left: 1px; padding-right: 1px; }
@@ -76,7 +78,7 @@ form.msg .glyphicon img { width: 20px; margin-top: -4px; }
 }
 #messages li .userprofilelink { cursor: pointer; }
 #messages li a.autolink {}
-#messages li img.autolink, #messages li video.autolink, #messages li iframe.autolink { max-width: 512px; }
+#messages li img.autolink, #messages li video.autolink, #messages li iframe.autolink { width: 100%; max-width: 512px; }
 #messages li video.autolink, #messages li iframe.autolink { padding: 3px; border: 3px solid #0a5; }
 /* small images override class, needs to be below any other messages img */
 #messages li .messagetext img, #messages li .messagetext video, #messages li .messagetext iframe { cursor: zoom-out; }
@@ -173,6 +175,8 @@ span.avatar {
     font-size: 32px;
 }
 #preview { display:none; }
+#iconNewMsg { color: rgba(0,210,0,0.75); font-size: 2em; position: fixed; right: 2px; bottom: 45px; cursor: pointer;}
+
 
 @media (max-width: 480px) {
     #messages { padding-left: 55px; }
@@ -183,5 +187,3 @@ span.avatar {
 
 .hidden { display: none; }
 .clearfloat { clear: both; float: none !important;}
-
-#iconNewMsg { color: rgba(0,210,0,0.75); font-size: 3em; position: fixed; right: 2px; top: 50%; bottom: 50% }
