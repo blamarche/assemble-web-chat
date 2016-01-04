@@ -321,6 +321,7 @@ $(document).ready(function(){
     //Paint panel with Literally Canvas - http://literallycanvas.com/
     LC.setDefaultImageURLPrefix('/literallycanvas/img');
     var lc = null;
+    var ldz = null;
     containerOne = document.getElementsByClassName('literally one')[0];
     $('#literallycanvasbtn').on('click', function(e) {
         $('#literallycanvas').modal();
@@ -328,7 +329,29 @@ $(document).ready(function(){
           lc = LC.init(containerOne, {
             imageSize: {width:507, height:null}
           });
+          ldz = new Dropzone("#literallyimgupFile",{
+              url:"/",
+              paramName: "file", // The name that will be used to transfer the file
+              maxFilesize: 0.5, // MB
+              previewsContainer: $("#preview")[0],
+              clickable: true,
+              maxFiles:1,
+              acceptedFiles: "image/*",
+              autoProcessQueue: false,
+              thumbnail: function(file, imguri) {
+                var newImage = new Image();
+                newImage.src = imguri;
+                lc.saveShape(LC.createShape('Image', {x:10, y:10, image: newImage}));
+              }
+          });
         }
+    });
+    //disable the normal dialog from showing
+    $("#literallyimgupFile").on('click',function() {
+        //return false;
+    });
+    $("#literallyimgup").on('click',function() {
+        $("#literallyimgupFile").click();
     });
     $('#literallypost').on('click', function(e) {
       e.preventDefault();
