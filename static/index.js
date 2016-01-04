@@ -135,7 +135,7 @@ $(document).ready(function(){
         }
     });
 
-    for (var x in icon_lib) { //its okk that these double. it'll only load once anyway
+    for (var x in icon_lib) { //its ok that these double. it'll only load once anyway
         var ic=$("<img>").attr("src","/icons/"+icon_lib[x]).attr("title", x);
         $("#iconPreload").append(ic);
         if (x.indexOf("(")==0) {
@@ -318,6 +318,22 @@ $(document).ready(function(){
 
     $("#clearbtn").on('click', function() {
       $("#messages li[data-room='"+cur_room+"']").addClass("hidden");
+    });
+
+    //Paint panel with Literally Canvas - http://literallycanvas.com/
+    $('#literallycanvasbtn').on('click', function(e) {
+        $('#literallycanvas').modal();
+        var lc = LC.init(
+            document.getElementsByClassName('literally')[0],
+            {imageURLPrefix: '/literallycanvas/img'}
+        );
+        $('#literallypost').on('click', function(e) {
+          // e.preventDefault();
+          var svgString = lc.getSVGString();
+          socket.emit('chatm', JSON.stringify({"t": token, "room": cur_room, "m": "data:image/svg+xml;base64,"+btoa(svgString), "dur":cur_dur}));
+          $('#literallycanvas').modal('hide');
+
+        });
     });
 
     $("#sendmessage").on('click', function(e) {

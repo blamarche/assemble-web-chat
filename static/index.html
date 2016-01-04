@@ -46,12 +46,15 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
     <meta name="theme-color" content="#ffffff">
 
     <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/literallycanvas/css/literallycanvas.css" rel="stylesheet">
     <link href="/index.css" rel="stylesheet">
 
     <script src="/socket.io.js"></script>
     <script src="/jquery-1.11.1.js"></script>
     <script src="/Autolinker.min.js"></script>
     <script src="/dropzone.js"></script>
+    <script src="/react-with-addons.js"></script>
+    <script src="/literallycanvas/js/literallycanvas.min.js"></script>
     <script>
     Dropzone.autoDiscover = false;
     </script>
@@ -84,7 +87,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
 
         <form action="" class="msg">
           <div class="row">
-              <div class="col-xs-8">
+              <div class="col-xs-7">
                 <textarea id="m"></textarea>
               </div>
 
@@ -97,6 +100,10 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
                   <button id="imgup" class="btn btn-primary"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></button>
                   <input type="" id="imgupFile" class=""></input>
               </span>
+              </div>
+
+              <div class="col-xs-1">
+                <button id="literallycanvasbtn" class="btn btn-danger"><span class="glyphicon glyphicon-picture" aria-hidden="true"></span></button>
               </div>
 
               <div class="col-xs-1">
@@ -332,6 +339,26 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
                               <li><span class="glyphicon glyphicon-cog"></span> - Open the options screen</li>
                           </ul>
                   </div>
+              </div>
+            </div><!-- /.modal-content -->
+          </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
+
+        <div id="literallycanvas" class="modal" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Paint Canvas</h4>
+              </div>
+              <div class="modal-body">
+                  <div class="row">
+                      <div class="literally"></div>
+                  </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                <button id="literallypost" type="button" class="btn btn-success">Post</button>
               </div>
             </div><!-- /.modal-content -->
           </div><!-- /.modal-dialog -->
