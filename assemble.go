@@ -127,7 +127,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 // signupHandler controls the signup and user profile update forms
 func signupHandler(w http.ResponseWriter, r *http.Request) {
-	//TODO Validation
 	if strings.ToUpper(r.Method) == "POST" {
 		invite, ok := service.Invites[r.FormValue("invite")]
 		tokenenc := r.FormValue("token")
@@ -411,13 +410,20 @@ func socketHandlers(so socketio.Socket) {
 			return
 		}
 
+		if uid == muid {
+			so.Emit("auth_error", "You can't message yourself")
+			return
+		}
+
 		//create private room, auto-invite & join the two participants
 		roomid := uid + ":" + muid
 		roomid2 := muid + ":" + uid
 		_, ok := service.Rooms[roomid]
 		_, ok2 := service.Rooms[roomid2]
 		if !ok && !ok2 {
-			service.CreateRoom(service.Users[uid].Token.Path("nick").Data().(string)+" / "+service.Users[muid].Token.Path("nick").Data().(string), roomid, true, uid, service.DefMaxExp, service.DefMinExp, "", service.Cfg.MaxHistoryLen)
+			service.CreateRoom(service.Users[uid].Token.Path("nick").Data().(string)+" / "+service.Users[muid].Token.Path("nick").Data().(string), roomid, true, true, uid, service.DefMaxExp, service.DefMinExp, "", service.Cfg.MaxHistoryLen)
+			service.Rooms[roomid].DirectUIDs[uid] = uid
+			service.Rooms[roomid].DirectUIDs[muid] = muid
 		} else if !ok && ok2 {
 			roomid = roomid2
 		}
@@ -447,6 +453,11 @@ func socketHandlers(so socketio.Socket) {
 		}
 
 		roomid := uuid.NewV4().String()
+		name = strings.Trim(name, " \n\t")
+		if name == "" {
+			so.Emit("auth_error", "Room must have a name")
+			return
+		}
 
 		for _, v := range service.Rooms {
 			if v.FriendlyName == name {
@@ -455,14 +466,15 @@ func socketHandlers(so socketio.Socket) {
 			}
 		}
 
-		service.CreateRoom(name, roomid, isprivate, uid, maxdur, mindur, "", service.Cfg.MaxHistoryLen)
+		service.CreateRoom(name, roomid, isprivate, false, uid, maxdur, mindur, "", service.Cfg.MaxHistoryLen)
 		service.AddToRoom(so, uid, roomid)
 	}))
 
 	so.On("leave", jsonSocketWrapper(so, true, func(uid string, g *gabs.Container) {
 		//remove from members list, unless its lobby
 		room := g.Path("room").Data().(string)
-		if room != "lobby" {
+		_, roomok := service.Rooms[room]
+		if roomok && room != "lobby" {
 			delete(service.Rooms[room].MemberUIDs, uid)
 		}
 		so.Emit("leave", room)
@@ -545,7 +557,6 @@ func socketHandlers(so socketio.Socket) {
 			service.SetUserOnline(uid, so)
 		}
 
-		//TODO message size limit enforcement
 		g.SetP("", "t")    //clear full token
 		g.SetP(uid, "uid") //set uid and user info
 		g.SetP(time.Now().Unix(), "time")
@@ -553,6 +564,11 @@ func socketHandlers(so socketio.Socket) {
 		g.SetP(uuid.NewV4().String(), "msgid")
 		g.SetP(service.Users[uid].Token.Path("avatar").Data().(string), "avatar")
 
+		if len(g.Path("m").Data().(string)) > 4096 {
+			//TODO add exception for data image uris
+			//so.Emit("auth_error", "Message is too long. Must be less than 4096 characters")
+			//return
+		}
 		g.SetP(html.EscapeString(g.Path("m").Data().(string)), "m")
 
 		//validate if user is in this room
@@ -587,6 +603,21 @@ func socketHandlers(so socketio.Socket) {
 			if dur < service.Rooms[room].MinExpTime {
 				dur = service.Rooms[room].MinExpTime
 				g.SetP(strconv.Itoa(int(dur.Seconds()))+"s", "dur")
+			}
+		}
+
+		//auto-join directUIDs who arent in member list
+		if service.Rooms[room].IsDirect {
+			for _, dmuid := range service.Rooms[room].DirectUIDs {
+				_, dmok := service.Rooms[room].MemberUIDs[dmuid]
+				if !dmok {
+					dmu, isonline := service.OnlineUsers[dmuid]
+					if !isonline {
+						so.Emit("auth_error", "Warning: User is not online")
+					} else {
+						service.AddToRoom(*dmu.So, dmuid, room)
+					}
+				}
 			}
 		}
 

@@ -80,7 +80,7 @@ func NewService(cfg *config.Config, userkey []byte) *Service {
 	}
 	s.DefMinExp = min
 
-	s.CreateRoom("Lobby", "lobby", false, "", s.DefMaxExp, s.DefMinExp, "", cfg.MaxHistoryLen)
+	s.CreateRoom("Lobby", "lobby", false, false, "", s.DefMaxExp, s.DefMinExp, "", cfg.MaxHistoryLen)
 
 	server, err := socketio.NewServer(nil)
 	if err != nil {
@@ -233,11 +233,12 @@ func (svc *Service) SetUserOnline(uid string, so socketio.Socket) {
 }
 
 // CreateRoom adds a room to the services list
-func (svc *Service) CreateRoom(fname, roomid string, isprivate bool, creatoruid string, maxexptime time.Duration, minexptime time.Duration, avatar string, maxhistorylen int) *Room {
+func (svc *Service) CreateRoom(fname, roomid string, isprivate, isdirect bool, creatoruid string, maxexptime time.Duration, minexptime time.Duration, avatar string, maxhistorylen int) *Room {
 	r := Room{}
 	r.FriendlyName = fname
 	r.RoomID = roomid
 	r.IsPrivate = isprivate
+	r.IsDirect = isdirect
 	r.CreatorUID = creatoruid
 	r.MaxExpTime = maxexptime
 	r.MinExpTime = minexptime
@@ -247,6 +248,7 @@ func (svc *Service) CreateRoom(fname, roomid string, isprivate bool, creatoruid 
 	r.Messages = make([]*gabs.Container, 0)
 	r.MemberUIDs = make(map[string]string, 10)
 	r.InvitedUIDs = make(map[string]string, 10)
+	r.DirectUIDs = make(map[string]string, 2)
 
 	svc.Rooms[roomid] = &r
 
