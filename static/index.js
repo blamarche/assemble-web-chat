@@ -341,7 +341,7 @@ $(document).ready(function(){
               thumbnail: function(file, imguri) {
                 var newImage = new Image();
                 newImage.src = imguri;
-                lc.saveShape(LC.createShape('Image', {x:10, y:10, image: newImage}));
+                lc.saveShape(LC.createShape('Image', {x:0, y:0, image: newImage}));
               }
           });
         }
@@ -355,7 +355,7 @@ $(document).ready(function(){
     });
     $('#literallypost').on('click', function(e) {
       e.preventDefault();
-      var pngString = lc.getImage().toDataURL();
+      var pngString = lc.getImage().toDataURL("image/jpeg",0.9);
       socket.emit('chatm', JSON.stringify({"t": token, "room": cur_room, "m": pngString, "dur":cur_dur}));
       $('#literallycanvas').modal('hide');
     });

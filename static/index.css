@@ -176,7 +176,7 @@ span.avatar {
 }
 #preview { display:none; }
 #iconNewMsg { color: rgba(0,210,0,0.75); font-size: 2em; position: fixed; right: 2px; bottom: 45px; cursor: pointer;}
-
+#literallyimgupFile { display: none; }
 
 @media (max-width: 480px) {
     #messages { padding-left: 55px; }
