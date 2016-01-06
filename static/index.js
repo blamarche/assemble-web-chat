@@ -346,7 +346,11 @@ $(document).ready(function(){
               }
           });
         }
-    });
+      });
+      $('#literallycanvas').on('shown.bs.modal', function (e) {
+        // This prevents a 0x0 canvas when the window is resized and the modal is hidden.
+        window.dispatchEvent(new Event('resize'));
+      });
     //disable the normal dialog from showing
     $("#literallyimgupFile").on('click',function() {
         //return false;
