@@ -327,7 +327,8 @@ $(document).ready(function(){
         $('#literallycanvas').modal();
         if (!lc) {
           lc = LC.init(containerOne, {
-            imageSize: {width:507, height:null}
+            imageSize: {width:507, height:null},
+            backgroundColor: 'rgba(255,255,255,1.0)'
           });
           ldz = new Dropzone("#literallyimgupFile",{
               url:"/",
