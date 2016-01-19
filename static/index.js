@@ -1191,6 +1191,6 @@ var icon_lib = {
     "(eek)":"eek.svg",
     "(y)":"y.svg",
     "(n)":"n.svg",
-    "(facepalm)":"facepalm2.jpg",
-    "(fp)":"facepalm.svg"
+    "(facepalm2)":"facepalm2.jpg",
+    "(facepalm)":"facepalm.svg"
 };
