@@ -92,8 +92,11 @@ func NewService(cfg *config.Config, userkey []byte) *Service {
 	iconfiles, err := ioutil.ReadDir("./static/icons")
 	if err == nil {
 		for _, f := range iconfiles {
-			fcode := strings.Replace(f.Name(), ".svg", "", -1)
-			s.IconsJs += fmt.Sprintf("icon_lib['(%s)'] = '%s';\n", fcode, f.Name())
+			if f.Name()!="LICENSE" {
+				fcode := strings.Replace(f.Name(), ".svg", "", -1)
+				fcode = strings.Replace(fcode, ".jpg", "", -1)
+				s.IconsJs += fmt.Sprintf("icon_lib['(%s)'] = '%s';\n", fcode, f.Name())
+			}
 		}
 	}
 
