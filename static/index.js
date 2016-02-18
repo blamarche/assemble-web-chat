@@ -85,6 +85,9 @@ socket.io.on('reconnect_error', function(e) {
     console.log(e);
 });
 
+
+hljs.initHighlightingOnLoad();
+
 $(document).ready(function(){
     $( window ).resize(function() {
         updateSidebar();
@@ -835,6 +838,7 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
         else
             m = "<img class='autolink upload"+small+"' src='"+m+"'></img>";
     } else {
+	var iscode = m.indexOf("!code ")==0;
         m = Autolinker.link(m, {
             stripPrefix: false,
             truncate: 30,
@@ -931,7 +935,11 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
         m = m.split("\n").join("<br>");
 
         //icons
-        m = processIcons(m);
+	if (!iscode)
+        	m = processIcons(m);
+	else {
+		m = '<pre><code>'+m.substring(6)+'</code></pre>';
+	}
     }
 
     if (avatar=="" || typeof avatar=="undefined") {
@@ -980,6 +988,10 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
         $('#messages').append(msgli);
     else if (mode=="prepend")
         $('#messages').prepend(msgli);
+
+    msgli.find('pre code').each(function(i, block) {
+    	hljs.highlightBlock(block);
+    });
 
     if (atBottom) {
       scrollToBottom();

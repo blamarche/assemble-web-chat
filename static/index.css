@@ -85,6 +85,7 @@ form.msg .glyphicon img { width: 20px; margin-top: -4px; }
 #messages li .messagetext img.smallimage { max-width: 128px; max-height: 128px; cursor: zoom-in; }
 #messages li .messagetext video.smallimage { max-width: 128px; max-height: 128px; cursor: zoom-in; }
 #messages li .messagetext iframe.smallimage { max-width: 128px; max-height: 128px; cursor: zoom-in; }
+pre code { font-family: 'Courier New', Courier, monospace; }
 
     div.useravatar { float:left; }
     div.messagecontainer { padding-left: 42px; }
