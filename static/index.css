@@ -44,6 +44,8 @@ form.msg .glyphicon img { width: 20px; margin-top: -4px; }
 #messages li img.smiley.large {
     width: 64px;
 }
+#messages li img.smiley.gif { width: 64px; }
+#messages li img.smiley.large.gif { width: 128px; }
 
 #messages li a.joinroom, #messages li a.signup {
     display: block;
