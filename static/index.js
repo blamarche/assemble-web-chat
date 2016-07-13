@@ -858,10 +858,10 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
                             if (noImages)
                                 return "<a href='"+href+"' target='_blank'>"+href+"</a>";
 				
-			    if (match.getUrl().indexOf( '#assembleiconsmall' ) !== -1) {
+			    if (match.getUrl().indexOf( '#iconsmall' ) !== -1) {
 				return "<img src='"+href+"' class='smiley gif'></img>";
 			    }
-			    if (match.getUrl().indexOf( '#assembleicon' ) !== -1) {
+			    if (match.getUrl().indexOf( '#icon' ) !== -1) {
                                 return "<img src='"+href+"' class='smiley large gif'></img>";
                             }
 
