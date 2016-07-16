@@ -31,6 +31,7 @@ var firstTime = false;
 var autoScroll = true;
 var defaultHistory = 15;
 var reconnectCount = 0;
+var customicons = [];
 
 //load settings from local
 if (storageAvailable('localStorage')) {
@@ -46,6 +47,8 @@ if (storageAvailable('localStorage')) {
         noImages = localStorage.getItem("noImages") == "true";
     if (localStorage.getItem("defaultHistory"))
         defaultHistory = parseInt(localStorage.getItem("defaultHistory"));
+    if (localStorage.getItem("customicons"))
+        customicons = JSON.parse(localStorage.getItem("customicons"));
 
     if (!localStorage.getItem("firstTime")) {
         localStorage.setItem("firstTime", "1");
@@ -136,11 +139,17 @@ $(document).ready(function(){
         }
     });
 
+    //load in custom icons 
+    for (var x=0; x<customicons.length; x++) {
+        addCustomIcon(customicons[x]);
+    }
+
+    //push in smileys
     for (var x in icon_lib) { //its ok that these double. it'll only load once anyway
         var ic=$("<img>").attr("src","/icons/"+icon_lib[x]).attr("title", x);
         $("#iconPreload").append(ic);
         if (x.indexOf("(")==0) {
-            $("#iconselect .modal-body").append(ic);
+            $("#iconselect .modal-body").prepend(ic);
         }
     }
 
@@ -403,6 +412,38 @@ $(document).ready(function(){
         return false;
     }
 
+    $("#customiconurl").on('drop', addiconevent);
+    $("#customiconurl").on('paste', addiconevent);
+    function addiconevent(ev) {
+        if (ev.originalEvent.clipboardData) { 
+            ev.originalEvent.dataTransfer = ev.originalEvent.clipboardData;
+        }
+        var icurl =  ev.originalEvent.dataTransfer.getData('text');//ev.currentTarget.value;
+        if (icurl!="") {
+            addCustomIcon(icurl);
+            customicons.push(icurl);
+            localStorage.setItem("customicons", JSON.stringify(customicons));
+            ev.preventDefault();
+            $("#customiconurl").val("");
+            return false;
+        }
+    }
+
+    $("#iconselect").on('contextmenu', '.modal-body img', function(ev){
+        if ($(ev.currentTarget).hasClass("customiconselect")) {
+            var icurl = $(ev.currentTarget).attr("src");
+            for (var x=0; x<customicons.length; x++) {
+                if (customicons[x]==icurl) {
+                    customicons.splice(x,1);
+                    localStorage.setItem("customicons",JSON.stringify(customicons));
+                }
+            }
+            $(ev.currentTarget).remove();
+        }
+        ev.preventDefault();
+        return false;
+    });
+
     $("#iconselect").on('click', '.modal-body img', function(ev){
         var ic=$(ev.currentTarget).attr("title");
         $("#iconselect").modal('hide');
@@ -412,7 +453,6 @@ $(document).ready(function(){
         } else {
             $("#m").val($("#m").val()+" "+ic);
         }
-
         $("#m").focus();
         ev.preventDefault();
         return false;
@@ -1143,6 +1183,10 @@ function handleCommand(socket,c) {
     $('#m').val('');
 }
 
+function addCustomIcon(x) {
+    var ic=$("<img>").attr("src",x).attr("title", x+"#icon").addClass("customiconselect");
+    $("#customicons").append(ic);
+}
 
 function storageAvailable(type) {
 	try {

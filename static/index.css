@@ -118,6 +118,7 @@ pre code { font-family: 'Courier New', Courier, monospace; }
     margin-right: 8px;
     cursor: pointer;
 }
+#iconselect .modal-body img.customiconselect { width: 96px; height: auto; margin-bottom: 4px; }
 
 #sidebar {
     background:#444;
