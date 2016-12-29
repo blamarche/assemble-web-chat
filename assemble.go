@@ -77,7 +77,7 @@ func main() {
 	userkey := []byte{}
 	fc, _ := ioutil.ReadFile("./userkey.txt")
 	if fc != nil {
-		userkey = fc[:]
+		userkey = fc[:32] //fix for go 1.7+
 	} else {
 		tmp := uuid.NewV4().String()
 		tmp = tmp[4:]
