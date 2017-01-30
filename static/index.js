@@ -817,7 +817,7 @@ function appendSystemMessage(msg, lifetimeMs, cssclass, mode) {
 
     // If scrolled to bottom already, scroll to bottom again after appending message
     var atBottom = false;
-    if($(window).scrollTop() + $(window).height() == $(document).height()) {
+    if ($(window).scrollTop() + $(window).height() >= $(document).height()-autoScrollMargin) {
       atBottom = true;
     }
     if (mode=="append")
