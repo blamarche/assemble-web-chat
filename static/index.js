@@ -30,6 +30,7 @@ var noImages = false;
 var firstTime = false;
 var autoScroll = true;
 var defaultHistory = 15;
+var autoScrollMargin = 48;
 var reconnectCount = 0;
 var customicons = [];
 
@@ -110,9 +111,9 @@ $(document).ready(function(){
             }
         });
 
-    // If the window has scrolled to the bottom, hide the new message indicator
+    // If the window has scrolled to the bottom (or near bottom), hide the new message indicator
     $(window).scroll(function() {
-      if($(window).scrollTop() + $(window).height() == $(document).height()) {
+      if($(window).scrollTop() + $(window).height() >= $(document).height()-autoScrollMargin) {
             $("#iconNewMsg").addClass("hidden");
       }
     });
@@ -1025,10 +1026,10 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
         return false;
     }
 
-    // If scrolled to bottom already, scroll to bottom again after appending message
+    // If scrolled to bottom already (or nearly), scroll to bottom again after appending message
     var atBottom = false;
-    if($(window).scrollTop() + $(window).height() == $(document).height()) {
-      atBottom = true;
+    if($(window).scrollTop() + $(window).height() >= $(document).height()-autoScrollMargin) {
+        atBottom = true;
     }
 
     if (mode=="append")
@@ -1041,9 +1042,27 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
     });
 
     if (atBottom) {
-      scrollToBottom();
+        var imgs = msgli.find('.messagetext img');
+        if (imgs.length>0) {
+            imgs.first().load(function() {
+                scrollToBottom();
+            });
+        } else {
+            var iframes = msgli.find('.messagetext iframe');
+            var videos = msgli.find('.messagetext video');
+            if (iframes.length>0) {
+                setTimeout(function() {
+                    scrollToBottom();
+                }, 1000);
+            } else if (videos.length) {
+                videos.first().on('loadedmetadata', function() {
+                    scrollToBottom();
+                });
+            }
+        }
+        scrollToBottom();
     } else {
-      $('#iconNewMsg').removeClass("hidden");
+        $('#iconNewMsg').removeClass("hidden");
     }
 
     return 1;
