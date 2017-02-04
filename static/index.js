@@ -398,10 +398,11 @@ $(document).ready(function(){
 
     //shrink/enlarge images
     $('#messages').on('click', '.messagetext img', imgtoggle);
-    $('#messages').on('contextmenu', '.messagetext img', imgtoggle);
+    //$('#messages').on('contextmenu', '.messagetext img', imgtoggle);
     $('#messages').on('click', '.messagetext iframe', imgtoggle);
-    $('#messages').on('contextmenu', '.messagetext iframe', imgtoggle);
-    $('#messages').on('contextmenu', '.messagetext video', imgtoggle); //firefox bug causes issues clicking on a control
+    //$('#messages').on('contextmenu', '.messagetext iframe', imgtoggle);
+    //$('#messages').on('contextmenu', '.messagetext video', imgtoggle); //firefox bug causes issues clicking on a control
+    $('#messages').on('click', '.messagetext video', imgtoggle); //firefox bug causes issues clicking on a control
     function imgtoggle(ev) {
         if (!$(ev.currentTarget).hasClass("smiley") && !$(ev.currentTarget).hasClass("avatar")) {
             if ($(ev.currentTarget).hasClass("smallimage")) {
@@ -755,6 +756,14 @@ socket.on('deletechatm', function(d){
             $("#messages li[data-msgid='"+d+"']").remove();
         });
     }, 3000);
+
+    $("#messages li.chatmsg .messagetext[data-msgid='"+d+"']").html("<i>Removed message</i>");
+    setTimeout(function(){
+        $("#messages li.chatmsg .messagetext[data-msgid='"+d+"']").slideUp(1000, function() {
+            $("#messages li.chatmsg .messagetext[data-msgid='"+d+"']").remove();
+        });
+    }, 3000);
+
 });
 
 function setJoined() {
@@ -858,7 +867,8 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
     }
     if (id!="") {
         var msgelem = $("#messages li.chatmsg[data-msgid='"+id+"']");
-        if (msgelem.length > 0)
+        var msgelem2 = $("#messages li.chatmsg .messagetext[data-msgid='"+id+"']");
+        if (msgelem.length > 0 || msgelem2.length > 0)
             return 0;
     }
 
@@ -879,7 +889,7 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
         else
             m = "<img class='autolink upload"+small+"' src='"+m+"'></img>";
     } else {
-	var iscode = m.indexOf("!code ")==0;
+	    var iscode = m.indexOf("!code ")==0;
         m = Autolinker.link(m, {
             stripPrefix: false,
             truncate: 30,
@@ -1006,20 +1016,57 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
         avatarimg = "<span class='glyphicon glyphicon-user avatar'></span>";
     }
 
-    var msgli = $('<li>')
-        .html("<div class='useravatar'>"+avatarimg+"</div><div class='messagecontainer'><a title='"+uid+"' data-uid='"+uid+"' class='userprofilelink nick'>"+nick+"</a> <span class='time' data-time='"+rawtime+"'>"+time+"</span> <br><span class='messagetext'>"+m+"</span>")
-        .attr("data-msgid", id)
-        .attr("data-room", room)
-        //.attr("title",id)
-        .addClass("chatmsg")
-        .addClass(hide);
+    var lastmsgli = $("#messages li.chatmsg[data-room='"+room+"']").last();
+    if (mode=="prepend")
+        lastmsgli = $("#messages li.chatmsg[data-room='"+room+"']").first();
+ 
+    var lastuid = lastmsgli.find(".messagecontainer a.nick").attr("data-uid");
+    var msgli = $('<li>');
 
-    msgli.children('.useravatar').on("contextmenu", delfunc);
-    msgli.find('a').on("contextmenu", delfunc);
+    var lasttime = lastmsgli.find(".time");
+    var rawlasttime = parseInt(lasttime.attr("data-time"));
+    var collapse = false;
+    if (Math.abs(rawtime - rawlasttime) <= 2*60*1000) {
+        collapse=true;
+    }
+
+    if (lastuid==uid && collapse) {
+        msgli = $("<span>")
+            .html(m)
+            .addClass("messagetext")
+            .addClass("collapsed")
+            .attr("data-msgid", id);
+
+        if (mode=="append") {
+            lasttime.attr("data-time", rawtime);
+            lasttime.html(time);
+        }
+
+        msgli.on("contextmenu", delfunc);
+    } else {
+        msgli = $('<li>')
+            .html("<div class='useravatar'>"+avatarimg+"</div><div class='messagecontainer'><a title='"+uid+"' data-uid='"+uid+"' class='userprofilelink nick'>"+nick+"</a> <span class='time' data-time='"+rawtime+"'>"+time+"</span> <br><span class='messagesubcontainer'><span class='messagetext'>"+m+"</span></span>")
+            .attr("data-msgid", id)
+            .attr("data-room", room)
+            .addClass("chatmsg")
+            .addClass(hide);
+
+        msgli.children('.useravatar').on("contextmenu", delfunc);
+        msgli.find('a').on("contextmenu", delfunc);
+        msgli.find('.messagetext').on("contextmenu", delfunc);
+        
+    }
+
     function delfunc(ev) {
-        var msgid = $(ev.currentTarget).parent().attr("data-msgid");
+        console.log(ev.target);
+        if (!$(ev.target).hasClass("messagetext"))
+            return true;
+
+        var msgid = $(ev.currentTarget).attr("data-msgid");
         if (typeof msgid=="undefined") {
-            msgid = $(ev.currentTarget).parent().parent().attr("data-msgid");
+            msgid = $(ev.currentTarget).parent().attr("data-msgid");
+            if (typeof msgid=="undefined")
+                msgid = $(ev.currentTarget).parent().parent().attr("data-msgid");
         }
         $("#btndeletemessage").attr("data-msgid", msgid);
         $("#deletemessagemodal").modal();
@@ -1032,10 +1079,20 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
         atBottom = true;
     }
 
-    if (mode=="append")
-        $('#messages').append(msgli);
-    else if (mode=="prepend")
-        $('#messages').prepend(msgli);
+    if (mode=="append") {
+        if (uid==lastuid && collapse) {
+            lastmsgli.find(".messagesubcontainer").append(msgli);
+        }
+        else
+            $('#messages').append(msgli);
+    }
+    else if (mode=="prepend") {
+        if (uid==lastuid && collapse) {
+            lastmsgli.find(".messagesubcontainer").prepend(msgli);            
+        }
+        else    
+            $('#messages').prepend(msgli);
+    }
 
     msgli.find('pre code').each(function(i, block) {
     	hljs.highlightBlock(block);
