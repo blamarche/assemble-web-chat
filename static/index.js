@@ -1051,10 +1051,11 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
             .addClass("chatmsg")
             .addClass(hide);
 
+        msgli.find('.messagetext').attr("data-msgid", id);
+        
         msgli.children('.useravatar').on("contextmenu", delfunc);
         msgli.find('a').on("contextmenu", delfunc);
         msgli.find('.messagetext').on("contextmenu", delfunc);
-        
     }
 
     function delfunc(ev) {
