@@ -34,6 +34,8 @@ var autoScrollMargin = 48;
 var reconnectCount = 0;
 var customicons = [];
 
+var lc = null;
+
 //load settings from local
 if (storageAvailable('localStorage')) {
     if (localStorage.getItem("enableSound"))
@@ -91,6 +93,40 @@ socket.io.on('reconnect_error', function(e) {
 
 
 hljs.initHighlightingOnLoad();
+
+function editTheImage(ev) {
+    if (ev.shiftKey) {
+        var _im = ev.currentTarget;
+        showLc(null);
+        lc.saveShape(LC.createShape('Image', {x:0, y:0, image: _im}));          
+        return false;
+    }    
+}
+
+function showLc(e) {
+    $('#literallycanvas').modal();
+    if (!lc) {
+        lc = LC.init(containerOne, {
+        imageSize: {width:507, height:null},
+        backgroundColor: 'rgba(255,255,255,1.0)'
+        });
+        ldz = new Dropzone("#literallyimgupFile",{
+            url:"/",
+            paramName: "file", // The name that will be used to transfer the file
+            maxFilesize: 0.5, // MB
+            previewsContainer: $("#preview")[0],
+            clickable: true,
+            maxFiles:1,
+            acceptedFiles: "image/*",
+            autoProcessQueue: false,
+            thumbnail: function(file, imguri) {
+            var newImage = new Image();
+            newImage.src = imguri;
+            lc.saveShape(LC.createShape('Image', {x:0, y:0, image: newImage}));
+            }
+        });
+    }
+}
 
 $(document).ready(function(){
     $( window ).resize(function() {
@@ -333,37 +369,17 @@ $(document).ready(function(){
 
     //Paint panel with Literally Canvas - http://literallycanvas.com/
     LC.setDefaultImageURLPrefix('/literallycanvas/img');
-    var lc = null;
+    //var lc = null;
+    lc = null;
     var ldz = null;
     containerOne = document.getElementsByClassName('literally one')[0];
-    $('#literallycanvasbtn').on('click', function(e) {
-        $('#literallycanvas').modal();
-        if (!lc) {
-          lc = LC.init(containerOne, {
-            imageSize: {width:507, height:null},
-            backgroundColor: 'rgba(255,255,255,1.0)'
-          });
-          ldz = new Dropzone("#literallyimgupFile",{
-              url:"/",
-              paramName: "file", // The name that will be used to transfer the file
-              maxFilesize: 0.5, // MB
-              previewsContainer: $("#preview")[0],
-              clickable: true,
-              maxFiles:1,
-              acceptedFiles: "image/*",
-              autoProcessQueue: false,
-              thumbnail: function(file, imguri) {
-                var newImage = new Image();
-                newImage.src = imguri;
-                lc.saveShape(LC.createShape('Image', {x:0, y:0, image: newImage}));
-              }
-          });
-        }
-      });
-      $('#literallycanvas').on('shown.bs.modal', function (e) {
-        // This prevents a 0x0 canvas when the window is resized and the modal is hidden.
-        window.dispatchEvent(new Event('resize'));
-      });
+    $('#literallycanvasbtn').on('click', showLc);
+    
+    $('#literallycanvas').on('shown.bs.modal', function (e) {
+    // This prevents a 0x0 canvas when the window is resized and the modal is hidden.
+    window.dispatchEvent(new Event('resize'));
+    });
+
     //disable the normal dialog from showing
     $("#literallyimgupFile").on('click',function() {
         //return false;
@@ -404,6 +420,10 @@ $(document).ready(function(){
     //$('#messages').on('contextmenu', '.messagetext video', imgtoggle); //firefox bug causes issues clicking on a control
     $('#messages').on('click', '.messagetext video', imgtoggle); //firefox bug causes issues clicking on a control
     function imgtoggle(ev) {
+        if (ev.shiftKey) {
+            return true;
+        }
+
         if (!$(ev.currentTarget).hasClass("smiley") && !$(ev.currentTarget).hasClass("avatar")) {
             if ($(ev.currentTarget).hasClass("smallimage")) {
                 $(ev.currentTarget).removeClass("smallimage");
@@ -1043,6 +1063,7 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
         }
 
         msgli.on("contextmenu", delfunc);
+        msgli.find('img').on('click', editTheImage);
     } else {
         msgli = $('<li>')
             .html("<div class='useravatar'>"+avatarimg+"</div><div class='messagecontainer'><a title='"+uid+"' data-uid='"+uid+"' class='userprofilelink nick'>"+nick+"</a> <span class='time' data-time='"+rawtime+"'>"+time+"</span> <br><span class='messagesubcontainer'><span class='messagetext'>"+m+"</span></span>")
@@ -1056,6 +1077,8 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
         msgli.children('.useravatar').on("contextmenu", delfunc);
         msgli.find('a').on("contextmenu", delfunc);
         msgli.find('.messagetext').on("contextmenu", delfunc);
+
+        msgli.find('.messagetext img').on('click', editTheImage);
     }
 
     function delfunc(ev) {
