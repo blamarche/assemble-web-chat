@@ -1063,7 +1063,7 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
         }
 
         msgli.on("contextmenu", delfunc);
-        msgli.find('img').on('click', editTheImage);
+        msgli.find('img.upload').on('click', editTheImage);
     } else {
         msgli = $('<li>')
             .html("<div class='useravatar'>"+avatarimg+"</div><div class='messagecontainer'><a title='"+uid+"' data-uid='"+uid+"' class='userprofilelink nick'>"+nick+"</a> <span class='time' data-time='"+rawtime+"'>"+time+"</span> <br><span class='messagesubcontainer'><span class='messagetext'>"+m+"</span></span>")
@@ -1078,7 +1078,7 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
         msgli.find('a').on("contextmenu", delfunc);
         msgli.find('.messagetext').on("contextmenu", delfunc);
 
-        msgli.find('.messagetext img').on('click', editTheImage);
+        msgli.find('.messagetext img.upload').on('click', editTheImage);
     }
 
     function delfunc(ev) {
