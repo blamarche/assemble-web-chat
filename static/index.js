@@ -1059,7 +1059,7 @@ function appendChatMessage(uid, room, roomname, nick, m, id, avatar, time, mode)
     }
 
     function delfunc(ev) {
-        console.log(ev.target);
+        //console.log(ev.target);
         if (!$(ev.target).hasClass("messagetext"))
             return true;
 
