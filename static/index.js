@@ -770,20 +770,26 @@ socket.on('invitenewuser', function(d){
 });
 
 socket.on('deletechatm', function(d){
-    $("#messages li[data-msgid='"+d+"']").html("<i>Removed message</i>");
-    setTimeout(function(){
-        $("#messages li[data-msgid='"+d+"']").slideUp(1000, function() {
-            $("#messages li[data-msgid='"+d+"']").remove();
-        });
-    }, 3000);
-
-    $("#messages li.chatmsg .messagetext[data-msgid='"+d+"']").html("<i>Removed message</i>");
-    setTimeout(function(){
-        $("#messages li.chatmsg .messagetext[data-msgid='"+d+"']").slideUp(1000, function() {
-            $("#messages li.chatmsg .messagetext[data-msgid='"+d+"']").remove();
-        });
-    }, 3000);
-
+    if ($("#messages li.chatmsg .messagetext[data-msgid='"+d+"']").parent().children(".messagetext").length <= 1) {
+        var li = $("#messages li.chatmsg .messagetext[data-msgid='"+d+"']").parent().parent().parent(); //yikes!
+        
+        li.html("<i style='display:block;'>Removed message</i>");
+        setTimeout(function(){
+            li.slideUp(1000, function() {
+                li.remove();
+            });
+        }, 3000);
+    } else {
+        var li=$("#messages li.chatmsg .messagetext[data-msgid='"+d+"']");
+        li.html("<i>Removed message</i>");
+        li.removeClass("messagetext");
+        li.addClass("deletedmessage");
+        setTimeout(function(){
+            li.slideUp(1000, function() {
+                li.remove();            
+            });
+        }, 3000);
+    }
 });
 
 function setJoined() {

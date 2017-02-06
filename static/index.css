@@ -39,7 +39,8 @@ form.msg .glyphicon img { width: 20px; margin-top: -4px; }
 #messages li { padding: 5px 10px; clear:both; line-height: 18px; border-left: 5px solid #d4d4d4; }
 #messages li:nth-child(odd) { background: #f4f4f4; border-left: 5px solid #d4d4d4; }
 #messages li.sysmsg { font-style: italic; border-left: 5px solid #0a7; background: white;}
-#messages .messagetext { word-wrap: break-word; hyphens: auto; display:block;  }
+#messages .messagetext, #messages .deletedmessage { word-wrap: break-word; hyphens: auto; display:block;  }
+
 #messages li img.smiley { width: 18px; }
 #messages li img.smiley.large {
     width: 64px;
