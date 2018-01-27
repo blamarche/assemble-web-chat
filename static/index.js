@@ -1163,6 +1163,7 @@ function processIcons(m) {
         m=m.split(x).join('<img src="/icons/'+icon_lib[x]+'" class="smiley" />');
         //needs to be smarter about where it does replacements?
     }
+    m = asciimoji(m);
     return m;
 }
 
