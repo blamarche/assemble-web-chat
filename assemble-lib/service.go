@@ -594,7 +594,9 @@ func CreateUpdatedUserToken(nick, name, email, phone, url, desc, avatar, alertad
 }
 
 func CreateNewUserToken(nick, name, email, phone, url, desc, avatar, alertaddress string) (*gabs.Container, error) {
-	uid := uuid.NewV4().String()
-	privid := uuid.NewV4().String()
+	tuid,_ := uuid.NewV4()
+	tprivid,_ := uuid.NewV4()
+	uid := tuid.String()
+	privid := tprivid.String()
 	return CreateUpdatedUserToken(nick, name, email, phone, url, desc, avatar, alertaddress, uid, privid)
 }

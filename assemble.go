@@ -79,7 +79,8 @@ func main() {
 	if fc != nil {
 		userkey = fc[:32] //fix for go 1.7+
 	} else {
-		tmp := uuid.NewV4().String()
+		uuidkey,_ := uuid.NewV4()
+		tmp := uuidkey.String()
 		tmp = tmp[4:]
 		ioutil.WriteFile("./userkey.txt", []byte(tmp), 0666)
 		userkey = []byte(tmp)
@@ -355,7 +356,8 @@ func socketHandlers(so socketio.Socket) {
 			em := g.Path("email").Data().(string)
 			fmt.Println(uid, "invited", html.EscapeString(em))
 
-			id := uuid.NewV4().String()
+			uuidinv,_ := uuid.NewV4()
+		        id:=uuidinv.String()
 			service.Invites[id] = em
 
 			so.Emit("invitenewuser", "{\"key\": \""+id+"\"}")
@@ -452,7 +454,9 @@ func socketHandlers(so socketio.Socket) {
 			maxdur = dur24h
 		}
 
-		roomid := uuid.NewV4().String()
+		uuidroom,_ := uuid.NewV4()
+                roomid := uuidroom.String()
+
 		name = strings.Trim(name, " \n\t")
 		if name == "" {
 			so.Emit("auth_error", "Room must have a name")
@@ -557,11 +561,14 @@ func socketHandlers(so socketio.Socket) {
 			service.SetUserOnline(uid, so)
 		}
 
+		uuidmsg,_ := uuid.NewV4()
+                tmp:=uuidmsg.String()
+
 		g.SetP("", "t")    //clear full token
 		g.SetP(uid, "uid") //set uid and user info
 		g.SetP(time.Now().Unix(), "time")
-		g.SetP(service.Users[uid].Token.Path("nick").Data().(string), "nick")
-		g.SetP(uuid.NewV4().String(), "msgid")
+		g.SetP(service.Users[uid].Token.Path("nick").Data().(string), "nick")		
+		g.SetP(tmp, "msgid")
 		g.SetP(service.Users[uid].Token.Path("avatar").Data().(string), "avatar")
 
 		if len(g.Path("m").Data().(string)) > 4096 {
