@@ -46,7 +46,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
     <meta name="theme-color" content="#ffffff">
 
     <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/literallycanvas/css/literallycanvas.css" rel="stylesheet">
+    <!--<link href="/literallycanvas/css/literallycanvas.css" rel="stylesheet">-->
     <link href="/index.css?r9003" rel="stylesheet">
     
     <link rel="stylesheet" href="/highlight/default.min.css">
@@ -57,8 +57,8 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
     <script src="/asciimoji.min.js"></script>
     <script src="/Autolinker.min.js"></script>
     <script src="/dropzone.js"></script>
-    <script src="/react-with-addons.js"></script>
-    <script src="/literallycanvas/js/literallycanvas.min.js"></script>
+    <!--<script src="/react-with-addons.js"></script>
+    <script src="/literallycanvas/js/literallycanvas.min.js"></script>-->
     <script>
     Dropzone.autoDiscover = false;
     </script>
@@ -93,7 +93,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
 
         <form action="" class="msg">
           <div class="row">
-              <div class="col-xs-7">
+              <div class="col-xs-8">
                 <textarea id="m"></textarea>
               </div>
 
@@ -107,11 +107,11 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
                   <input type="" id="imgupFile" class=""></input>
               </span>
               </div>
-
+	      <!--
               <div class="col-xs-1">
                 <button id="literallycanvasbtn" class="btn btn-danger"><span class="glyphicon glyphicon-picture" aria-hidden="true"></span></button>
               </div>
-
+		-->
               <div class="col-xs-1">
                 <span id="iconbtn" class="btn btn-info" data-target="#iconselect" data-toggle="modal"><span class="glyphicon" aria-hidden="true"><img src="/icons/smile.svg"/></span></span>
               </div>
@@ -207,6 +207,12 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
                             <button id="disablealerts" type="button" class="btn">Disable Email / Text Alerts</button>
                         </div>
                     </div>
+		    <div class="form-group">
+                        <div class="btn-group" role="group">
+                            <button id="normalfont" type="button" class="btn btn-success">Normal Font Size</button>
+                            <button id="largefont" type="button" class="btn">Large Font Size</button>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <div class="btn-group" role="group">
                             <button id="enablesound" type="button" class="btn btn-success">Enable Sounds</button>
@@ -225,6 +231,9 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
                             <button id="btnautoscrollon" type="button" class="btn btn-success">Enable Auto Scroll-To-Bottom</button>
                             <button id="btnautoscrolloff" type="button" class="btn">Disable Auto Scroll-To-Bottom</button>
                         </div>
+                    </div>
+		    <div class="form-group">
+                        <button id="btnforcereload" type="button" class="btn btn-warning" onclick="window.location.reload(true)" >Reload Assemble</button>
                     </div>
                     <div class="form-group">
                         <button id="btnupdateprofile" type="button" class="btn btn-primary" data-dismiss="modal">Update Profile (Nickname, Avatar, etc...)</button>

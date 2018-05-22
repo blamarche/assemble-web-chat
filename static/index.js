@@ -36,6 +36,7 @@ var defaultHistory = 30;
 var autoScrollMargin = 48;
 var reconnectCount = 0;
 var customicons = [];
+var largeFont = false;
 
 var lc = null;
 
@@ -55,6 +56,8 @@ if (storageAvailable('localStorage')) {
         defaultHistory = parseInt(localStorage.getItem("defaultHistory"));
     if (localStorage.getItem("customicons"))
         customicons = JSON.parse(localStorage.getItem("customicons"));
+    if (localStorage.getItem("largeFont"))
+        largeFont = localStorage.getItem("largeFont")=="true";
 
     if (!localStorage.getItem("firstTime")) {
         localStorage.setItem("firstTime", "1");
@@ -73,12 +76,13 @@ function auth(d) {
     roomnames={};
     updateSidebar();
     setTimeout(function(){
-        socket.emit("auth", token);
+        setConnectMsg("Sending authentication token.");
+	socket.emit("auth", token);
+	setTimeout(function() {
+            if (!hasAuthed)
+                window.location.reload(true);
+        }, 10000);
     }, 250);
-    setTimeout(function() {
-	if (!hasAuthed)
-	    window.location.reload(true);
-    }, 10000);
 }
 socket.on('disconnect', function(d) {
     setConnectMsg("Reconnecting.");
@@ -115,15 +119,18 @@ function setConnectMsg(msg) {
 }
 
 function editTheImage(ev) {
+    /*
     if (ev.shiftKey) {
         var _im = ev.currentTarget;
         showLc(null);
         lc.saveShape(LC.createShape('Image', {x:0, y:0, image: _im}));          
         return false;
-    }    
+    } 
+    */   
 }
 
 function showLc(e) {
+    /*
     $('#literallycanvas').modal();
     if (!lc) {
         lc = LC.init(containerOne, {
@@ -146,9 +153,14 @@ function showLc(e) {
             }
         });
     }
+	*/
 }
 
 $(document).ready(function(){
+    if (largeFont) {
+	$('body').addClass('largefont');
+    }
+
     setConnectMsg("Establishing connection.");
 
     socket = io("", {reconnectionDelayMax:2000, reconnectionDelay:1000, timeout: 6000, multiplex:false });
@@ -307,6 +319,18 @@ $(document).ready(function(){
             localStorage.setItem("enableSound", enableSound);
     });
 
+    //font size options
+    $("#normalfont").on('click', function(e) {
+	$("body").removeClass("largefont");
+	localStorage.setItem("largeFont", "");
+	largeFont=false;
+    });
+    $("#largefont").on('click', function(e) {
+        $("body").addClass("largefont");
+	localStorage.setItem("largeFont", "true");
+	largeFont=true;
+    });
+
     //image size options
     $('#btnsmallimages').on('click', function(e) {
         noImages = false;
@@ -395,7 +419,7 @@ $(document).ready(function(){
     });
 
     //Paint panel with Literally Canvas - http://literallycanvas.com/
-    LC.setDefaultImageURLPrefix('/literallycanvas/img');
+    //LC.setDefaultImageURLPrefix('/literallycanvas/img');
     //var lc = null;
     lc = null;
     var ldz = null;
@@ -776,15 +800,15 @@ socket.on('join', function(d){
 
 	setTimeout(function() {
 	    socket.emit("history",JSON.stringify({"t": token, "room": d.room, "last": defaultHistory}));   //request history
-	}, 500);
+	}, 750);
 
 	setConnectMsg("Room joined, requesting message history.");
 
 	setTimeout(function() {
-	    setConnectMsg("Room joined, requesting message history.<br>Retrying in 10 seconds.");
+	    setConnectMsg("Room joined, requesting message history.<br>Retrying in 5 seconds.");
 	}, 5000);
 	clearTimeout(histRetry);
-	histRetry = setTimeout(retryHistoryLoop, 15000);
+	histRetry = setTimeout(retryHistoryLoop, 10000);
     } else if (hasJoined) {
         setJoined();
     }
@@ -798,9 +822,9 @@ function retryHistoryLoop() {
          }
          setConnectMsg("Retrying message history request.");
 	 setTimeout(function() {
-             setConnectMsg("Requesting message history.<br>Retrying again in 10 seconds.");
+             setConnectMsg("Requesting message history.<br>Retrying again in 5 seconds.");
          }, 5000);
-	 histRetry = setTimeout(retryHistoryLoop, 15000);
+	 histRetry = setTimeout(retryHistoryLoop, 10000);
     }
 }
 
