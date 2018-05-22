@@ -15,7 +15,8 @@ You should have received a copy of the GNU General Public License
 along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var socket = io("", {reconnectionDelayMax:1000, reconnectionDelay:500, timeout: 10000000, multiplex:false});
+//var socket = io("", {reconnectionDelayMax:2000, reconnectionDelay:1000, timeout: 10000, multiplex:false });
+var socket = null;
 var rooms = {};
 var roomnames = {};
 var cur_room = "";
@@ -24,6 +25,8 @@ var token = window.location.hash.substring(1);
 var newMsgCount=0;
 var switchOnJoin = true;
 var hasJoined = false;
+var hasAuthed = false;
+var hasHistory = false;
 var enableSound = true;
 var smallImages = false;
 var noImages = false;
@@ -62,8 +65,9 @@ if (storageAvailable('localStorage')) {
 }
 
 //socket events
+function hookSocketInit() {
 socket.on('connect', auth);
-//socket.on('reconnect', auth);
+socket.on('reconnect', auth);
 function auth(d) {
     rooms={};
     roomnames={};
@@ -71,28 +75,44 @@ function auth(d) {
     setTimeout(function(){
         socket.emit("auth", token);
     }, 250);
+    setTimeout(function() {
+	if (!hasAuthed)
+	    window.location.reload(true);
+    }, 10000);
 }
 socket.on('disconnect', function(d) {
+    setConnectMsg("Reconnecting.");
     $(".connecting").removeClass("hidden");
     hasJoined=false;
+    hasAuthed=false;
     reconnectCount++;
 });
 
 socket.io.on('connect_timeout', function(e) {
+    appendSystemMessage("socket connect timeout", 60000);
     console.log("socket timeout");
     console.log(e);
 });
 socket.io.on('connect_error', function(e) {
+    appendSystemMessage("socket connect error", 60000);
     console.log("socket error");
     console.log(e);
 });
 socket.io.on('reconnect_error', function(e) {
+    appendSystemMessage("socket reconnect error", 60000);
     console.log("socket reconnect error");
     console.log(e);
 });
 
+} //end hookSocketInit
 
 hljs.initHighlightingOnLoad();
+
+function setConnectMsg(msg) {
+    if (document.getElementById("connectmsg")) {
+	document.getElementById("connectmsg").innerHTML = msg;
+    }
+}
 
 function editTheImage(ev) {
     if (ev.shiftKey) {
@@ -129,6 +149,13 @@ function showLc(e) {
 }
 
 $(document).ready(function(){
+    setConnectMsg("Establishing connection.");
+
+    socket = io("", {reconnectionDelayMax:2000, reconnectionDelay:1000, timeout: 6000, multiplex:false });
+    hookSocketInit();
+    hookSocketChat();
+
+
     $( window ).resize(function() {
         updateSidebar();
     });
@@ -574,6 +601,7 @@ $("#btnroomusers").on('click', function() {
     socket.emit("roomusers",JSON.stringify({"t": token, "room": cur_room}));
 });
 
+function hookSocketChat() {
 socket.on('chatm', function(d){
     d=JSON.parse(d);
     appendChatMessage(d.uid,d.room,d.name,d.nick,d.m,d.msgid,d.avatar,d.time);
@@ -689,9 +717,7 @@ socket.on('roomlist', function(d){
 });
 
 socket.on('history', function(d){
-    if (!hasJoined) {
-        setJoined();
-    }
+    setJoined();
 
     var d=JSON.parse(d);
     var added = 0;
@@ -705,15 +731,19 @@ socket.on('history', function(d){
         }
     }
     updateSidebar();
+
+    var li = $("#messages li.chatmsg a.loadhistory.tmp[data-room='"+d.room+"']").parent().remove();
+
     if (added>0) {
         //bug fix applying .chatmsg to load more links
         var hiddenclass="";
         if (d.room!=cur_room)
             hiddenclass="hidden";
-        appendSystemMessage("<a class='loadhistory' data-room='"+d.room+"'>Load more history...</a>",0, "chatmsg", 'prepend').removeClass("sysmsg").addClass(hiddenclass).attr('data-room', d.room);
+        appendSystemMessage("<a class='loadhistory' data-room='"+d.room+"'>Load history...</a>",0, "chatmsg", 'prepend').removeClass("sysmsg").addClass(hiddenclass).attr('data-room', d.room);
     }
 });
 
+var histRetry = null;
 socket.on('join', function(d){
     var d=JSON.parse(d);
     if (d.minexptime.indexOf("h0m")!=-1) {
@@ -730,7 +760,8 @@ socket.on('join', function(d){
         d.maxexptime = d.maxexptime.replace("0s","");
 
     if (!(d.name in roomnames)) {
-        rooms[d.room] = {users: [], messages: [], friendlyname: d.name, mcount: 0, minexptime: d.minexptime, maxexptime: d.maxexptime};
+        hasJoined=true;
+	rooms[d.room] = {users: [], messages: [], friendlyname: d.name, mcount: 0, minexptime: d.minexptime, maxexptime: d.maxexptime};
         roomnames[d.name] = d.room;
         if (d.room=="lobby" || switchOnJoin) {
             switchRoom(d.room);
@@ -738,12 +769,40 @@ socket.on('join', function(d){
         }
         var t = (new Date()).getTime()/1000;
         //appendChatMessage("", d.room, d.name, "<em>SYSTEM</em>", "Joined "+d.name+" ("+d.minexptime+" - "+d.maxexptime+")", "", "/icons/icon_important.svg", t, 'prepend');
-        socket.emit("history",JSON.stringify({"t": token, "room": d.room, "last": defaultHistory}));   //request history
+	var hiddenclass="";
+        if (d.room!=cur_room)
+            hiddenclass="hidden";
+  	appendSystemMessage("<a class='loadhistory tmp' data-room='"+d.room+"'>Load history...</a>",0, "chatmsg", 'prepend').removeClass("sysmsg").addClass(hiddenclass).attr('data-room', d.room);
+
+	setTimeout(function() {
+	    socket.emit("history",JSON.stringify({"t": token, "room": d.room, "last": defaultHistory}));   //request history
+	}, 500);
+
+	setConnectMsg("Room joined, requesting message history.");
+
+	setTimeout(function() {
+	    setConnectMsg("Room joined, requesting message history.<br>Retrying in 10 seconds.");
+	}, 5000);
+	clearTimeout(histRetry);
+	histRetry = setTimeout(retryHistoryLoop, 15000);
     } else if (hasJoined) {
         setJoined();
     }
     updateSidebar();
 });
+
+function retryHistoryLoop() {
+    if (!hasHistory) {
+         for (var rt in rooms) {
+              socket.emit("history",JSON.stringify({"t": token, "room": rooms[rt], "last": defaultHistory}));
+         }
+         setConnectMsg("Retrying message history request.");
+	 setTimeout(function() {
+             setConnectMsg("Requesting message history.<br>Retrying again in 10 seconds.");
+         }, 5000);
+	 histRetry = setTimeout(retryHistoryLoop, 15000);
+    }
+}
 
 socket.on('joined', function(d){
     var d=JSON.parse(d);
@@ -761,7 +820,13 @@ socket.on('auth_error', function(d){
 });
 
 socket.on('auth', function(d){
-    //appendSystemMessage("Logged in successfully",3000);
+    //appendSystemMessage("Logged in successfully",10000);
+    hasAuthed=true;
+    setConnectMsg("Authenticated. Waiting for room data.");
+    setTimeout(function() {
+        if (!hasJoined)
+            window.location.reload(true);
+    }, 7500);
 });
 
 socket.on('invitenewuser', function(d){
@@ -792,10 +857,15 @@ socket.on('deletechatm', function(d){
     }
 });
 
+}// end hookSocketChat
+
 function setJoined() {
-    $(".connecting").addClass("hidden");
-    $("#m").focus();
+    if (!$(".connecting").hasClass("hidden"))
+	$(".connecting").addClass("hidden");
+    if (!isIOSDevice())
+        $("#m").focus();
     hasJoined=true;
+    hasHistory=true;
 }
 
 function updateSidebar() {
@@ -1193,7 +1263,12 @@ function switchRoom(room) {
 
     updateSidebar();
     scrollToBottom();
-    $("#m").focus();
+    if (!isIOSDevice())
+    	$("#m").focus();
+}
+
+function isIOSDevice() {
+    return navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i);
 }
 
 function switchRoomByName(roomname) {

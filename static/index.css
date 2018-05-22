@@ -13,6 +13,15 @@ a { cursor: pointer; }
     z-index: 99999;
     font-weight: bold;
 }
+#connectmsg {
+    margin-top: 30px;
+    font-weight: bold;
+    color: white;
+    font-size: 18px;
+    width: 100%;
+    text-align: center;
+}
+
 
 #firstTime p { font-size: 16px; }
 #firstTime li { font-size: 15px; list-style-type: none; padding: 5px; }

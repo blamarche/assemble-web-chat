@@ -1,6 +1,6 @@
 <!doctype html>
-<html>
-<!--
+<html manifest="cache.manifest">
+<!-- 
 This file is part of Assemble Web Chat.
 
 Assemble Web Chat is free software: you can redistribute it and/or modify
@@ -47,7 +47,7 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
 
     <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="/literallycanvas/css/literallycanvas.css" rel="stylesheet">
-    <link href="/index.css?r9002" rel="stylesheet">
+    <link href="/index.css?r9003" rel="stylesheet">
     
     <link rel="stylesheet" href="/highlight/default.min.css">
     <script src="/highlight/highlight.min.js"></script>
@@ -68,7 +68,9 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
   </head>
 
   <body>
-    <div class="row connecting">Connecting...</div>
+    <div class="row connecting">Connecting...
+	<div id="connectmsg"></div>
+    </div>
     <div class="container-fluid">
 
         <!-- UI -->
@@ -386,7 +388,15 @@ along with Assemble Web Chat.  If not, see <http://www.gnu.org/licenses/>.
     <div id="iconPreload" class="hidden"></div>
     <div id="iconNewMsg" class="hidden"><span class="glyphicon glyphicon-circle-arrow-down" aria-hidden="true"></span></div>
 
-    <script src="/index.js?r9002"></script>
-    <script src="/iconlib.js?r9002"></script>
+    <script src="/index.js?r9003"></script>
+    <script src="/iconlib.js?r9003"></script>
+
+    <script>
+    function updateSite(event) {
+        window.location.reload(true);
+    }
+    if (typeof window.applicationCache!="undefined")
+        window.applicationCache.addEventListener('updateready', updateSite, false);
+    </script>
   </body>
 </html>
