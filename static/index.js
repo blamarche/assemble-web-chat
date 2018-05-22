@@ -502,7 +502,7 @@ $(document).ready(function(){
         } else {
             $("#m").val($("#m").val()+" "+ic);
         }
-        $("#m").focus();
+	focusInput();
         ev.preventDefault();
         return false;
     });
@@ -608,7 +608,7 @@ socket.on('chatm', function(d){
 
     if ($("#m").prop('disabled')==true) {
         $("#m").prop('disabled', false);
-        $("#m").focus();
+        focusInput();
     }
     $("#m").prop('disabled', false);
 
@@ -862,8 +862,8 @@ socket.on('deletechatm', function(d){
 function setJoined() {
     if (!$(".connecting").hasClass("hidden"))
 	$(".connecting").addClass("hidden");
-    if (!isIOSDevice())
-        $("#m").focus();
+
+    focusInput();
     hasJoined=true;
     hasHistory=true;
 }
@@ -1263,8 +1263,14 @@ function switchRoom(room) {
 
     updateSidebar();
     scrollToBottom();
+    focusInput();
+}
+
+function focusInput() {
     if (!isIOSDevice())
-    	$("#m").focus();
+        $("#m").focus();
+    else
+	$("#m").blur();
 }
 
 function isIOSDevice() {
