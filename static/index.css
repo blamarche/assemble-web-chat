@@ -204,3 +204,42 @@ span.avatar {
 
 .hidden { display: none; }
 .clearfloat { clear: both; float: none !important;}
+
+/************ sidebar hiding **************/
+body.sidebarhide #sidebar {
+    width: 0;
+}
+body.sidebarhide #messages {
+    padding-left: 0;
+    margin-left: -20px;
+}
+
+
+/************** Dark theme ******************/
+body.dark-theme {
+    background-color: #222;
+}
+body.dark-theme #messages li {
+    background: #222;
+    color: #dedede;
+}
+body.dark-theme #messages li:nth-child(2n+1) {
+    background: #1b1b1b;
+    color: #dedede;
+}
+body.dark-theme .msg textarea {
+    background: #555;
+    color: #dedede;
+}
+body.dark-theme a.nick {
+    color: #b60;
+}
+body.dark-theme #sidebar {
+    background: #1e1e1e;
+}
+body.dark-theme #sidebar li:nth-child(2n+1) {
+    background: #282828;
+}
+body.dark-theme #sidebar li.active {
+    background: #b60;
+}

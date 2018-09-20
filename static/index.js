@@ -37,11 +37,15 @@ var autoScrollMargin = 48;
 var reconnectCount = 0;
 var customicons = [];
 var largeFont = false;
+var useTheme = "";
 
 var lc = null;
 
 //load settings from local
+function loadSettings() {
 if (storageAvailable('localStorage')) {
+    if (localStorage.getItem("useTheme"))
+        useTheme = localStorage.getItem("useTheme");
     if (localStorage.getItem("enableSound"))
         enableSound = localStorage.getItem("enableSound") == "true";
     if (localStorage.getItem("autoScroll"))
@@ -63,8 +67,41 @@ if (storageAvailable('localStorage')) {
         localStorage.setItem("firstTime", "1");
         firstTime = true;
     }
+
+    applyTheme();
 } else {
     //console.log("No local storage");
+}
+}
+loadSettings();
+
+function serializeSettings() {
+    var settings = {};
+    for (var i=0; i<localStorage.length; i++) {
+       settings[localStorage.key(i)] = localStorage.getItem(localStorage.key(i))
+    }
+    return JSON.stringify(settings);
+}
+
+function restoreSettings(settings) {
+	try {
+		settings = settings.trim();
+		if (settings=="") return true;
+
+		var settings = JSON.parse(settings);
+		for (var prop in settings) {
+			localStorage.setItem(prop, settings[prop]);
+		}
+		loadSettings();
+		if (largeFont)
+			$("body").addClass("largefont");
+		else
+			$("body").removeClass("largefont");
+		return true;
+	} catch (ex) {
+		console.log("error loading settings");
+		return false;
+	}
 }
 
 //socket events
@@ -93,17 +130,17 @@ socket.on('disconnect', function(d) {
 });
 
 socket.io.on('connect_timeout', function(e) {
-    appendSystemMessage("socket connect timeout", 60000);
+    //appendSystemMessage("socket connect timeout", 60000);
     console.log("socket timeout");
     console.log(e);
 });
 socket.io.on('connect_error', function(e) {
-    appendSystemMessage("socket connect error", 60000);
+    //appendSystemMessage("socket connect error", 60000);
     console.log("socket error");
     console.log(e);
 });
 socket.io.on('reconnect_error', function(e) {
-    appendSystemMessage("socket reconnect error", 60000);
+    //appendSystemMessage("socket reconnect error", 60000);
     console.log("socket reconnect error");
     console.log(e);
 });
@@ -111,6 +148,16 @@ socket.io.on('reconnect_error', function(e) {
 } //end hookSocketInit
 
 hljs.initHighlightingOnLoad();
+
+
+function applyTheme() {
+    //remove all possible theme classes then add the current setting theme
+    $("body").removeClass("dark-theme");
+    $("body").removeClass("light-theme");
+    if (useTheme!="") {
+        $("body").addClass(useTheme);
+    }
+}
 
 function setConnectMsg(msg) {
     if (document.getElementById("connectmsg")) {
@@ -294,6 +341,20 @@ $(document).ready(function(){
         socket.emit("setalerts", JSON.stringify({"t": token, "enabled": false}));
     });
 
+    //alerts options
+    $('#darktheme').on('click', function(e) {
+        useTheme="dark-theme";
+        if (storageAvailable('localStorage'))
+            localStorage.setItem("useTheme", useTheme);
+        applyTheme();
+    });
+    $('#lighttheme').on('click', function(e) {
+        useTheme="";
+        if (storageAvailable('localStorage'))
+            localStorage.setItem("useTheme", useTheme);
+        applyTheme();
+    });
+
 
     //scroll options
     $('#btnautoscrollon').on('click', function(e) {
@@ -413,6 +474,19 @@ $(document).ready(function(){
 
         $("#createroom .roomname").val("");
     });
+
+    $("#togglesidebtn").on('click', function() {
+      if ($('body').hasClass("sidebarhide")) {
+        $('body').removeClass("sidebarhide");
+      } else {
+	$('body').addClass("sidebarhide");
+      }
+    });
+
+    if (window.innerWidth < 500) {
+	//hide bar on mobile/small windows by default
+        $('body').addClass("sidebarhide");
+    }
 
     $("#clearbtn").on('click', function() {
       $("#messages li[data-room='"+cur_room+"']").addClass("hidden");
@@ -610,6 +684,17 @@ $("#btncreateroom").on('click', function() {
 /*$("#btnduration").on('click', function() {
     $("#messageduration").modal();
 });*/
+
+$("#backupsettings").on('click', function() {
+	var s = serializeSettings();
+	appendSystemMessage(s, 60000);
+	alert("You will find your settings string in the chat window. Please save this string in a text file in case you need to restore later.");
+});
+$("#restoresettings").on('click', function() {
+	restoreSettings(prompt('Paste your settings string here:','{}'));
+	alert("Settings have been restored. You will need to refresh the page to see your custom icons.");
+});
+
 $("#btnoptions").on('click', function() {
     $("#options").modal();
 });
@@ -715,7 +800,7 @@ socket.on('roomusers', function(d) {
     }
     m+="<div class='clearfloat'></div>";
     $('#messages li.userlist').slideUp(500);
-    appendSystemMessage(m,0,'userlist');
+    appendSystemMessage(m,15000,'userlist');
 });
 
 socket.on('onlineusers', function(d) {
@@ -726,7 +811,7 @@ socket.on('onlineusers', function(d) {
     }
     m+="<div class='clearfloat'></div>";
     $('#messages li.userlist').slideUp(500);
-    appendSystemMessage(m,0,'userlist');
+    appendSystemMessage(m,15000,'userlist');
 });
 
 socket.on('roomlist', function(d){
@@ -737,7 +822,7 @@ socket.on('roomlist', function(d){
     }
     m+="<div class='clearfloat'></div>";
     $('#messages li.roomlist').slideUp(500);
-    appendSystemMessage(m, 0, 'roomlist');
+    appendSystemMessage(m, 15000, 'roomlist');
 });
 
 socket.on('history', function(d){
@@ -805,7 +890,7 @@ socket.on('join', function(d){
 	setConnectMsg("Room joined, requesting message history.");
 
 	setTimeout(function() {
-	    setConnectMsg("Room joined, requesting message history.<br>Retrying in 5 seconds.");
+	    setConnectMsg("Room joined, requesting message history.<br>Reticulating splines, retrying in 5 seconds.");
 	}, 5000);
 	clearTimeout(histRetry);
 	histRetry = setTimeout(retryHistoryLoop, 10000);
@@ -1354,7 +1439,7 @@ function handleCommand(socket,c) {
                 /join room-name - Attempts to join a room by name <br>\
                 /switch room-name - Switches your chat focus to a room by name <br>\
                 /roomlist - Lists all public rooms with links to join <br>\
-            ", 0);
+            ", 15000);
             break;
         case "/leave":
             socket.emit("leave", JSON.stringify({"t": token, "room": cur_room}));
