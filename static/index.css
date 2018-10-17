@@ -126,8 +126,8 @@ pre code { font-family: 'Courier New', Courier, monospace; }
 
 #iconselect .modal-body { text-align: center; }
 #iconselect .modal-body img {
-    width: 48px;
-    height: 48px;
+    width: 36px;
+    height: 36px;
     margin-right: 8px;
     cursor: pointer;
 }
